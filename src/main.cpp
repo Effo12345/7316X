@@ -1,5 +1,11 @@
-#include "main.h"
 #include "define.h"
+#include "functions.h"
+
+int stickMultiplier = 1;
+bool intakeToggle = true;
+bool clipToggle = true;
+bool smallLiftValue = false;
+//bool bigLiftValue = false;
 
 /**
  * A callback function for LLEMU's center button.
@@ -25,12 +31,15 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
 
 	//Set the braking mode for the mobile goal lift so it holds its position when no button is being pressed
-	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	smallLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	bigLift1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+
+	smallLift.tare_position();
 }
 
 /**
@@ -78,6 +87,13 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	//Create lift tasks
+	smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
+	pros::c::task_suspend(smallLiftTask);
+
+	bigLiftTask = pros::c::task_create(BigLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Big lift");
+	pros::c::task_suspend(bigLiftTask);
+
 
 	while (true) {
 		//Updates the on-screen buttons
@@ -85,21 +101,70 @@ void opcontrol() {
 		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
 		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
 
+		//Button to invert sticks
+		if(master.get_digital_new_press(DIGITAL_A))
+			stickMultiplier *= -1;
+
+		//Button to toggle ringle intake
+		if(master.get_digital_new_press(DIGITAL_B))
+			intakeToggle = !intakeToggle;
+
+			//Button to toggle the pneumatic clip
+			if(master.get_digital_new_press(DIGITAL_Y))
+				clipToggle = !clipToggle;
+
 		//Get the values of the y-axes of the left and right sticks, and store them in left and right respectively
-		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = master.get_analog(ANALOG_RIGHT_Y);
+		int left = master.get_analog(ANALOG_LEFT_Y) * stickMultiplier;
+		int right = master.get_analog(ANALOG_RIGHT_Y) * stickMultiplier;
+
+		//-1330
+		//-1246 (better)
+		//Run small lift PID when the L1 or L2 buttons are pressed
+		if(master.get_digital_new_press(DIGITAL_L1) && !smallLiftValue)
+		{
+			smallLiftSetpoint = -1200;
+			smallLiftValue = true;
+			pros::c::task_resume(smallLiftTask);
+		}
+		else if(master.get_digital_new_press(DIGITAL_L2) && smallLiftValue)
+		{
+			smallLiftSetpoint = -1563;
+			smallLiftValue = false;
+			pros::c::task_resume(smallLiftTask);
+		}
 
 		//Calculate the movement of the lift based on the L1 and L2 buttons
-		int liftValue = (master.get_digital(DIGITAL_L1) - master.get_digital(DIGITAL_L2));
+		int smallLiftValue = (master.get_digital(DIGITAL_L1) - master.get_digital(DIGITAL_L2));
+		int bigLiftValue = (master.get_digital(DIGITAL_R1) - master.get_digital(DIGITAL_R2));
 
 		//Set the power of the drivetrain motors based on the controller sticks
-		driveFL.move(left);
-		driveBL.move(left);
-		driveFR.move(right);
-		driveBR.move(right);
+		if(stickMultiplier + 1)
+		{
+			driveFL.move(left);
+			driveBL.move(left);
+			driveFR.move(right);
+			driveBR.move(right);
+		}
+		else
+		{
+			driveFL.move(right);
+			driveBL.move(right);
+			driveFR.move(left);
+			driveBR.move(left);
+		}
 
-		//Set the power of the mobile goal lift motor based on the value calculated above
-		lift.move_velocity(liftValue * 200);
+		//Set the power of the mobile goal lifts motor based on the value calculated above
+		//smallLift.move_velocity(smallLiftValue * 100);
+		bigLift1.move_velocity(bigLiftValue * 100);
+		bigLift2.move_velocity(bigLiftValue * 100);
+
+		//Set the power of the ringle intake based on value calculated above
+		intake.move_velocity(200 * intakeToggle);
+
+		//Sets the state of the pneumatic clip based on the value calculated above
+		clip.set_value(clipToggle);
+
+		pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
 
 		pros::delay(20);
 	}

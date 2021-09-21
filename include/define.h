@@ -9,6 +9,35 @@ extern pros::Motor driveFL;
 extern pros::Motor driveBL;
 extern pros::Motor driveFR;
 extern pros::Motor driveBR;
-extern pros::Motor lift;
+extern pros::Motor smallLift;
+extern pros::Motor bigLift1;
+extern pros::Motor bigLift2;
+extern pros::Motor intake;
+
+extern pros::ADIDigitalOut clip;
+
+extern pros::task_t smallLiftTask;
+extern pros::task_t bigLiftTask;
+
+extern float smallLiftSetpoint;
+extern float bigLiftSetpoint;
+
+
+struct sPos {
+  float leftLst;
+  float rightLst;
+  float backLst;
+
+  float a;
+  float x;
+  float y;
+} position;
+
+struct vector
+{
+    float x;
+    float y;
+    float magnitude;
+};
 
 #endif
