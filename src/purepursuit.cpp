@@ -122,7 +122,7 @@ void CalculateVelocities(std::vector<std::vector<double>>& path, double maxVeloc
     }
 }
 
-void Move(std::vector<std::vector<double>>& path, sPos& position, double r)
+void Move(std::vector<std::vector<double>>& path, double r)
 {
   double fractionalIndex = 0;
   vector lookaheadPoint;
@@ -135,7 +135,7 @@ void Move(std::vector<std::vector<double>>& path, sPos& position, double r)
     //L is the end point of the vector
     //C is the center of the circle (with r lookahead distance)
 
-    //d = l - E
+    //d = L - E
     vector d;
     d.x = path[i + 1][0] - path[i][0];
     d.y = path[i + 1][1] - path[i][1];
@@ -211,8 +211,17 @@ void Move(std::vector<std::vector<double>>& path, sPos& position, double r)
       }
     }
   }
+
+  //Find the curvature of the movement arc
+  double a = -tan(position.a);
+  double b = 1;
+  double c = tan(position.a) * position.x - position.y;
+  double x = std::abs(a * lookaheadPoint.x + b * lookaheadPoint.y + c) / sqrt(pow(a, 2) + pow(b, 2));
+  //Find the side of the robot the lookahead point is on
+  int side = sgn(sin(position.a) * (lookaheadPoint.x - position.x) - cos(position.a) * (lookaheadPoint.y - position.a));
 }
 
+/*
 int main()
 {
     straightPath = InjectPoints(waypoints, 6.0);
@@ -227,3 +236,4 @@ int main()
     }
     return 0;
 }
+*/

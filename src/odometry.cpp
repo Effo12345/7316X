@@ -7,7 +7,7 @@ float L_DISTANCE_IN = 7.25;
 float R_DISTANCE_IN = 7.25;
 float S_DISTANCE_IN = 8.50;
 
-void trackPosition(int left, int right, int back, sPos& position){
+void trackPosition(int left, int right, int back){
   float L = (left - position.leftLst) / 45.836     /*41.671*/; //The amount the left tracking wheel moved in inches
   float R = (right - position.rightLst) / 45.836; //The amount the right tracking wheel moved in inches
   float S = (back - position.backLst) / 45.836; //The amount the tracking wheel moved in inches

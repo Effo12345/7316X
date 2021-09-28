@@ -31,7 +31,8 @@ struct sPos {
   float a;
   float x;
   float y;
-} position;
+} ;
+extern sPos position;
 
 struct vector
 {
@@ -39,5 +40,9 @@ struct vector
     float y;
     float magnitude;
 };
+
+template <typename T> int sgn(T val) {
+  return (T(0) < val) - (val < T(0));
+}
 
 #endif

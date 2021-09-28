@@ -20,11 +20,7 @@ void SmallLiftPID(void* setpoint)
     if(std::abs(error) < 3)
     {
       loopExits ++;
-      pros::lcd::set_text(3, std::to_string(loopExits));
       pros::c::task_suspend(smallLiftTask);
-      failedLoopExit = true;
-      pros::lcd::set_text(4, std::to_string(failedLoopExit));
-
     }
 
     pros::delay(15);

@@ -1,4 +1,3 @@
-#include "define.h"
 #include "functions.h"
 
 int stickMultiplier = 1;
@@ -159,12 +158,14 @@ void opcontrol() {
 		bigLift2.move_velocity(bigLiftValue * 100);
 
 		//Set the power of the ringle intake based on value calculated above
-		intake.move_velocity(200 * intakeToggle);
+		intake.move_velocity(600 * intakeToggle);
 
 		//Sets the state of the pneumatic clip based on the value calculated above
 		clip.set_value(clipToggle);
 
 		pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
+
+		pros::lcd::set_text(2, std::to_string(left));
 
 		pros::delay(20);
 	}
