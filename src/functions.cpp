@@ -48,3 +48,20 @@ void BigLiftPID(void* setpoint)
     pros::delay(15);
   }
 }
+
+double RateLimiter(double input, int lastCall, double maxRateChange, double prevOutput)
+{
+  int timeSinceLastCall = pros::millis()/1000 - lastCall/1000;
+
+  double maxChange = timeSinceLastCall * maxRateChange;
+  double output;
+
+  if((input - prevOutput) < -maxChange)
+    output = -maxChange;
+  else if(input - prevOutput > maxChange)
+    output = maxChange;
+  else
+    output = input - prevOutput;
+
+  return output;
+}

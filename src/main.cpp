@@ -165,8 +165,6 @@ void opcontrol() {
 
 		pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
 
-		pros::lcd::set_text(2, std::to_string(left));
-
 		pros::delay(20);
 	}
 }

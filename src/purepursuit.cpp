@@ -1,4 +1,4 @@
-#include "define.h"
+#include "functions.h"
 
 std::vector<std::vector<double>> waypoints
 {
@@ -122,15 +122,36 @@ void CalculateVelocities(std::vector<std::vector<double>>& path, double maxVeloc
     }
 }
 
-void Move(std::vector<std::vector<double>>& path, double r)
+void Move(std::vector<std::vector<double>>& path, double lookaheadDistance)
 {
+  //Find closest point on the path (add line number here)
+  int closestPoint;
+  //Find intersection (lookahead point) (add line number here)
   double fractionalIndex = 0;
   vector lookaheadPoint;
+  //Rate limiter implimentation
+  int lastCall = 0;
 
+  //while loop starts here
+
+  //Find closest point on the path
+  double lastClosestDistance = 100;
+
+  for(int i = closestPoint; i < path.size(); i++)
+  {
+    double distance = sqrt(pow(path[i][0] - position.x, 2) + pow(path[i][1] - position.y, 2));
+
+    if(distance < lastClosestDistance)
+    {
+      lastClosestDistance = distance;
+      closestPoint = i;
+    }
+  }
+
+
+  //Find intersection (lookahead point)
   for(int i = 0; i < path.size() - 1; i++)
   {
-    //Find intersection (lookahead point)
-
     //E is the starting point of the vector
     //L is the end point of the vector
     //C is the center of the circle (with r lookahead distance)
@@ -151,7 +172,7 @@ void Move(std::vector<std::vector<double>>& path, double r)
     double b = 2 * ((f.x * d.x) + (f.y * d.y));
     //c = f.DotProduct(f) - r * r
     //r is the radius of the sphere, the lookahead distance
-    double c = ((f.x * f.x) + (f.y * f.y)) - (r * r);
+    double c = ((f.x * f.x) + (f.y * f.y)) - (lookaheadDistance * lookaheadDistance);
 
     //discriminant = b * b - 4 * a * c
     double discriminant = (b * b) - (4 * a * c);
@@ -217,8 +238,24 @@ void Move(std::vector<std::vector<double>>& path, double r)
   double b = 1;
   double c = tan(position.a) * position.x - position.y;
   double x = std::abs(a * lookaheadPoint.x + b * lookaheadPoint.y + c) / sqrt(pow(a, 2) + pow(b, 2));
+  double curvature = (2 * x) / (pow(lookaheadDistance, 2));
   //Find the side of the robot the lookahead point is on
   int side = sgn(sin(position.a) * (lookaheadPoint.x - position.x) - cos(position.a) * (lookaheadPoint.y - position.a));
+
+  //Compute wheel velocities
+  //L = target left wheel's speed
+  //R = target right wheel's speed
+  //T = track width
+  double T = 15.75; //inches
+
+  //Rate limiter implimentation
+  double maxRateChange;
+  double targetVelocity = RateLimiter(path[closestPoint][3], lastCall, maxRateChange, targetVelocity);
+  lastCall = pros::millis();
+
+  //Target left wheel speed
+  double L = targetVelocity * (2 + (curvature * T)) / 2;
+  double R = targetVelocity * (2 - (curvature * T)) / 2;
 }
 
 /*
