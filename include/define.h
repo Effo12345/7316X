@@ -16,12 +16,40 @@ extern pros::Motor intake;
 
 extern pros::ADIDigitalOut clip;
 
+extern pros::Rotation leftEncoder;
+extern pros::Rotation rightEncoder;
+extern pros::ADIEncoder backEncoder;
+
+extern pros::Imu imu;
+
 extern pros::task_t smallLiftTask;
 extern pros::task_t bigLiftTask;
+extern pros::task_t driveTrainTask;
+extern pros::task_t purePursuitTask;
+extern pros::task_t odometryTask;
 
 extern float smallLiftSetpoint;
+extern float smallLiftKP;
 extern float bigLiftSetpoint;
+extern float driveTrainSetpoint;
+extern float driveError;
+extern float driveTrainKP;
+extern float turnSetpoint;
+extern float driveLeftError;
+extern float driveRightError;
+extern float driveLeftSetpoint;
+extern float driveRightSetpoint;
 
+extern int autonSelect;
+
+extern double wheelConversionFactor;
+
+extern FILE* targetVelocityL;
+extern FILE* targetVelocityR;
+extern FILE* measuredVelocityL;
+extern FILE* measuredVelocityR;
+
+extern double DPStoRPM;
 
 struct sPos {
   float leftLst;

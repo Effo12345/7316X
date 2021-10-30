@@ -1,26 +1,12 @@
 #include "functions.h"
+#include "purepursuit.h"
 
 int stickMultiplier = 1;
-bool intakeToggle = true;
+bool intakeToggle = false;
 bool clipToggle = true;
 bool smallLiftValue = false;
 //bool bigLiftValue = false;
 
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
-}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -31,7 +17,9 @@ void on_center_button() {
 void initialize() {
 	pros::lcd::initialize();
 
-	pros::lcd::register_btn1_cb(on_center_button);
+	pros::lcd::register_btn0_cb(OnLeftButton);
+	pros::lcd::register_btn1_cb(OnCenterButton);
+	pros::lcd::register_btn2_cb(OnRightButton);
 
 	//Set the braking mode for the mobile goal lift so it holds its position when no button is being pressed
 	smallLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -39,6 +27,13 @@ void initialize() {
 	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 	smallLift.tare_position();
+
+	leftEncoder.reset_position();
+	leftEncoder.set_reversed(true);
+	rightEncoder.reset_position();
+	backEncoder.reset();
+
+	imu.reset();
 }
 
 /**
@@ -57,7 +52,12 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() {
+	/*
+	pros::lcd::set_text(1, "Ran autonon");
+	autonomous();
+	*/
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -70,7 +70,144 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	//PurePursuitInit();
+
+	smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
+	smallLiftSetpoint = -1650;
+	smallLiftKP = 0.1;
+
+	while(smallLift.get_position() > smallLiftSetpoint + 20)
+		pros::delay(20);
+
+	driveTrainSetpoint = -700; //Original: 1469
+	driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
+
+	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) > driveTrainSetpoint + 30)
+		pros::delay(20);
+
+	smallLiftSetpoint = -1115;
+	smallLiftKP = 0.25;
+
+	while(smallLift.get_position() < smallLiftSetpoint - 10)
+		pros::delay(20);
+
+	driveTrainSetpoint = 0;
+
+	intake.tare_position();
+	intake.move_velocity(200);
+
+	while((intake.get_position()) < (360 * 10))
+		pros::delay(20);
+
+	intake.move_velocity(0);
+
+  pros::delay(250);
+  pros::c::task_delete(driveTrainTask);
+	pros::c::task_delete(smallLiftTask);
+
+/*
+	clip.set_value(false);
+	driveTrainSetpoint = 1500; //Original: 1469
+	driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
+	pros::delay(500);
+
+	smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
+	smallLiftSetpoint = -1650;
+	smallLiftKP = 0.1;
+
+	bigLift1.move_velocity(-100);
+	bigLift2.move_velocity(-100);
+	pros::delay(500);
+	bigLift1.move_velocity(0);
+	bigLift2.move_velocity(0);
+
+	bigLift1.tare_position();
+	bigLift2.tare_position();
+
+	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) < (driveTrainSetpoint - 30))
+		pros::delay(20);
+	clip.set_value(true);
+	pros::delay(250);
+
+	driveTrainSetpoint = 750;
+
+	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) > (driveTrainSetpoint))
+	{
+		if((bigLift1.get_position() + bigLift2.get_position()) / 2 < 400)
+		{
+			bigLift1.move_velocity(100);
+			bigLift2.move_velocity(100);
+		}
+		else
+		{
+			bigLift1.move_velocity(0);
+			bigLift2.move_velocity(0);
+		}
+		pros::delay(20);
+	}
+
+	pros::delay(100);
+
+	leftEncoder.reset_position();
+	rightEncoder.reset_position();
+	driveTrainSetpoint = 0;
+	pros::c::task_delete(driveTrainTask);
+	//pros::c::task_suspend(driveTrainTask);
+	pros::delay(250);
+
+
+
+	TurnPID(-60);
+	pros::lcd::set_text(7, "Turn finished");
+	//TurnPID(-1900, 230); //Original: -305, 230
+	//pros::lcd::set_text(1, "Turn completed");
+
+/*
+	bigLift1.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
+	while((bigLift1.get_position() + bigLift2.get_position()) / 2 > 100)
+	{
+		pros::lcd::set_text(5, std::to_string((bigLift1.get_position() + bigLift2.get_position()) / 2));
+		pros::delay(10);
+	}
+	clip.set_value(false);
+
+
+	leftEncoder.reset_position();
+	rightEncoder.reset_position();
+
+	pros::delay(100);
+	driveTrainSetpoint = -400;
+	driveTrainKP = 0.5;
+	pros::c::task_resume(driveTrainTask);
+
+	while(std::abs(driveError) > 10)
+		pros::delay(20);
+
+	pros::lcd::set_text(1, "Moved back");
+	smallLiftSetpoint = -1115;
+	smallLiftKP = 0.25;
+	pros::lcd::set_text(1, "Moved lift up");
+	driveTrainSetpoint = 0;
+
+	//driveTrainSetpoint = 5;
+	//pros::c::task_resume(driveTrainTask);
+
+	intake.tare_position();
+	intake.move_velocity(200);
+
+	while((intake.get_position()) < 360)
+		pros::delay(20);
+
+	intake.move_velocity(0);
+	//big lift top position: 2269
+
+	pros::c::task_delete(driveTrainTask);
+	pros::c::task_delete(smallLiftTask);
+	*/
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -93,6 +230,13 @@ void opcontrol() {
 	bigLiftTask = pros::c::task_create(BigLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Big lift");
 	pros::c::task_suspend(bigLiftTask);
 
+	fclose(targetVelocityL);
+	fclose(targetVelocityR);
+	fclose(measuredVelocityL);
+	fclose(measuredVelocityR);
+
+	bigLift1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
 	while (true) {
 		//Updates the on-screen buttons
@@ -121,13 +265,15 @@ void opcontrol() {
 		//Run small lift PID when the L1 or L2 buttons are pressed
 		if(master.get_digital_new_press(DIGITAL_L1) && !smallLiftValue)
 		{
-			smallLiftSetpoint = -1200;
+			smallLiftSetpoint = -1115;
+			smallLiftKP = 0.25;
 			smallLiftValue = true;
 			pros::c::task_resume(smallLiftTask);
 		}
 		else if(master.get_digital_new_press(DIGITAL_L2) && smallLiftValue)
 		{
-			smallLiftSetpoint = -1563;
+			smallLiftSetpoint = -1574;
+			smallLiftKP = 0.1;
 			smallLiftValue = false;
 			pros::c::task_resume(smallLiftTask);
 		}
@@ -163,7 +309,12 @@ void opcontrol() {
 		//Sets the state of the pneumatic clip based on the value calculated above
 		clip.set_value(clipToggle);
 
-		pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
+		//pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
+
+		pros::lcd::set_text(1, std::to_string(leftEncoder.get_position() / 100));
+		pros::lcd::set_text(2, std::to_string(rightEncoder.get_position() / 100));
+		pros::lcd::set_text(3, std::to_string(backEncoder.get_value()));
+		pros::lcd::set_text(4, std::to_string(imu.get_rotation()));
 
 		pros::delay(20);
 	}
