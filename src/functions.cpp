@@ -6,20 +6,21 @@ bool failedLoopExit = false;
 float leftError = 6;
 float rightError = 6;
 
-void DriveTrainPID(void* setpoint)
+void DriveTrainPID(float setpoint)
 {
-  driveTrainKP = 0.5; //Original 1.2
+  float kP = 0.5; //Original 1.2
   float kI = 0.0;
   float kD = 0.2; //Original 0.3
 
+  float error = 6;
   float prevError;
 
-  while(true /*std::abs(error) < 5*/)
+  while(std::abs(error) > 5)
   {
-    driveError = driveTrainSetpoint - (((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2);
-    float integral = integral + driveError;
+    error = setpoint - (((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2);
+    float integral = integral + error;
 
-    if(driveError == 0)
+    if(error == 0)
       integral = 0;
 
     if(integral > 12000)
@@ -27,25 +28,19 @@ void DriveTrainPID(void* setpoint)
 			integral = 0;
 		}
 
-    float derivative = driveError - prevError;
-    float power = (driveError * driveTrainKP) + (integral * kI) + (derivative * kD);
-    prevError = driveError;
+    float derivative = error - prevError;
+    float power = (error * kP) + (integral * kI) + (derivative * kD);
+    prevError = error;
 
-    driveFL.move_velocity(power);
-    driveBL.move_velocity(power);
-    driveFR.move_velocity(power);
-    driveBR.move_velocity(power);
+    for(pros::Motor m : driveTrain)
+      m.move_velocity(power);
 
     pros::lcd::set_text(1, std::to_string(((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2));
-
-    if(std::abs(driveError) < 5)
-    {
-      driveFL.move_velocity(0);
-      driveBL.move_velocity(0);
-      driveFR.move_velocity(0);
-      driveBR.move_velocity(0);
-    }
   }
+  driveFL.move_velocity(0);
+  driveBL.move_velocity(0);
+  driveFR.move_velocity(0);
+  driveBR.move_velocity(0);
 }
 
 void TurnPID(int setpoint)
@@ -133,6 +128,9 @@ void BigLiftPID(void* setpoint)
   }
 }
 
+
+
+
 void OnLeftButton()
 {
 	//If left button has been clicked before...
@@ -170,9 +168,9 @@ void OnCenterButton()
 	//If left button was clicked before this...
 	if(autonSelect == 1)
 	{
-		//Then run left no platform auton
+		//Then run left grab auton
 		autonSelect = 7;
-		pros::lcd::set_text(3, "No platform");
+		pros::lcd::set_text(3, "Grab");
 	}
   //If the center button has been clicked before...
   else if(autonSelect == 2)
@@ -183,9 +181,9 @@ void OnCenterButton()
 	//If right button was pressed before this...
 	else if(autonSelect == 3)
 	{
-		//Then run right no platform auton
+		//Then run right grab auton
 		autonSelect = 8;
-		pros::lcd::set_text(3, "No platform");
+		pros::lcd::set_text(3, "Grab");
 	}
 	//If this is the first button being pressed...
 	else if(autonSelect == 0)
@@ -226,136 +224,6 @@ void OnRightButton()
     autonSelect = 3;
     pros::lcd::set_text(2, "Right");
   }
-}
-
-void RightWinPoint()
-{
-  smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
-	smallLiftSetpoint = -1650;
-	smallLiftKP = 0.1;
-
-	while(smallLift.get_position() > smallLiftSetpoint + 20)
-		pros::delay(20);
-
-	driveTrainSetpoint = -700; //Original: 1469
-	driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
-
-	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) > driveTrainSetpoint + 20)
-		pros::delay(20);
-
-	smallLiftSetpoint = -1115;
-	smallLiftKP = 0.25;
-
-	while(smallLift.get_position() < smallLiftSetpoint - 10)
-		pros::delay(20);
-
-	driveTrainSetpoint = 0;
-
-	intake.tare_position();
-	intake.move_velocity(200);
-
-	while((intake.get_position()) < (360 * 10))
-		pros::delay(20);
-
-	intake.move_velocity(0);
-
-  pros::delay(250);
-  pros::c::task_delete(driveTrainTask);
-	pros::c::task_delete(smallLiftTask);
-}
-
-void LeftWinPoint()
-{
-  smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
-  smallLiftSetpoint = -1650;
-  smallLiftKP = 0.1;
-
-  while(smallLift.get_position() > smallLiftSetpoint + 20)
-    pros::delay(20);
-
-  driveTrainSetpoint = -500; //Original: 1469
-  driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
-
-  while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) > driveTrainSetpoint + 20)
-    pros::delay(20);
-
-  smallLiftSetpoint = -1115;
-  smallLiftKP = 0.25;
-
-  while(smallLift.get_position() < smallLiftSetpoint - 10)
-    pros::delay(20);
-
-  driveTrainSetpoint = 0;
-
-  intake.tare_position();
-  intake.move_velocity(200);
-
-  while((intake.get_position()) < (360 * 10))
-    pros::delay(20);
-
-  intake.move_velocity(0);
-
-  pros::delay(250);
-  pros::c::task_delete(driveTrainTask);
-	pros::c::task_delete(smallLiftTask);
-}
-
-void RightGrab()
-{
-  clip.set_value(false);
-	driveTrainSetpoint = 1500; //Original: 1469
-	driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
-	pros::delay(500);
-
-	bigLift1.move_velocity(-100);
-	bigLift2.move_velocity(-100);
-	pros::delay(500);
-	bigLift1.move_velocity(0);
-	bigLift2.move_velocity(0);
-
-	bigLift1.tare_position();
-	bigLift2.tare_position();
-
-	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) < (driveTrainSetpoint - 30))
-		pros::delay(20);
-	clip.set_value(true);
-	pros::delay(250);
-
-	driveTrainSetpoint = 100;
-
-  while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) < (driveTrainSetpoint - 30))
-		pros::delay(20);
-
-  pros::c::task_delete(driveTrainTask);
-}
-
-void LeftGrab()
-{
-  clip.set_value(false);
-	driveTrainSetpoint = 1500; //Original: 1469
-	driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
-	pros::delay(500);
-
-	bigLift1.move_velocity(-100);
-	bigLift2.move_velocity(-100);
-	pros::delay(500);
-	bigLift1.move_velocity(0);
-	bigLift2.move_velocity(0);
-
-	bigLift1.tare_position();
-	bigLift2.tare_position();
-
-	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) < (driveTrainSetpoint - 30))
-		pros::delay(20);
-	clip.set_value(true);
-	pros::delay(250);
-
-	driveTrainSetpoint = 100;
-
-  while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) < (driveTrainSetpoint - 30))
-		pros::delay(20);
-
-  pros::c::task_delete(driveTrainTask);
 }
 
 

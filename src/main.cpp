@@ -4,7 +4,7 @@
 int stickMultiplier = 1;
 bool intakeToggle = false;
 bool clipToggle = true;
-bool smallLiftValue = false;
+bool smallLiftValue = true;
 //bool bigLiftValue = false;
 
 
@@ -73,38 +73,7 @@ void competition_initialize() {
 void autonomous() {
 	//PurePursuitInit();
 
-	smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
-	smallLiftSetpoint = -1650;
-	smallLiftKP = 0.1;
-
-	while(smallLift.get_position() > smallLiftSetpoint + 20)
-		pros::delay(20);
-
-	driveTrainSetpoint = -700; //Original: 1469
-	driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
-
-	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) > driveTrainSetpoint + 30)
-		pros::delay(20);
-
-	smallLiftSetpoint = -1115;
-	smallLiftKP = 0.25;
-
-	while(smallLift.get_position() < smallLiftSetpoint - 10)
-		pros::delay(20);
-
-	driveTrainSetpoint = 0;
-
-	intake.tare_position();
-	intake.move_velocity(200);
-
-	while((intake.get_position()) < (360 * 10))
-		pros::delay(20);
-
-	intake.move_velocity(0);
-
-  pros::delay(250);
-  pros::c::task_delete(driveTrainTask);
-	pros::c::task_delete(smallLiftTask);
+	autonPointers[autonSelect]();
 
 /*
 	clip.set_value(false);
@@ -226,6 +195,7 @@ void opcontrol() {
 	//Create lift tasks
 	smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
 	pros::c::task_suspend(smallLiftTask);
+	smallLiftSetpoint = -1115;
 
 	bigLiftTask = pros::c::task_create(BigLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Big lift");
 	pros::c::task_suspend(bigLiftTask);

@@ -6,8 +6,10 @@
 //Allows all parts of the program to access the motors and controller as global variables
 extern pros::Controller master;
 extern pros::Motor driveFL;
+extern pros::Motor driveML;
 extern pros::Motor driveBL;
 extern pros::Motor driveFR;
+extern pros::Motor driveMR;
 extern pros::Motor driveBR;
 extern pros::Motor smallLift;
 extern pros::Motor bigLift1;
@@ -31,15 +33,13 @@ extern pros::task_t odometryTask;
 extern float smallLiftSetpoint;
 extern float smallLiftKP;
 extern float bigLiftSetpoint;
-extern float driveTrainSetpoint;
-extern float driveError;
-extern float driveTrainKP;
-extern float turnSetpoint;
-extern float driveLeftError;
-extern float driveRightError;
-extern float driveLeftSetpoint;
-extern float driveRightSetpoint;
 
+extern pros::Motor driveTrain[];
+
+
+typedef void(*FnPtr) ();
+extern void (*grabL) (), (*grabR) (), (*winPointL) (), (*winPointR) (), (*fullL) (), (*none) ();
+extern FnPtr autonPointers[];
 extern int autonSelect;
 
 extern double wheelConversionFactor;
