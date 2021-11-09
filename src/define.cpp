@@ -4,17 +4,17 @@
 //Motor and controller declarations
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 pros::Motor driveFL(15);
-pros::Motor driveML(1);
+pros::Motor driveML(1, true);
 pros::Motor driveBL(17);
 pros::Motor driveFR(18, true);
-pros::Motor driveMR(2, true);
+pros::Motor driveMR(2);
 pros::Motor driveBR(16, true);
 pros::Motor smallLift(2);
 pros::Motor bigLift1(10);
 pros::Motor bigLift2(19, true);
 pros::Motor intake(12);
 
-pros::ADIDigitalOut clip(3);
+pros::ADIDigitalOut frontClip(3);
 
 pros::Rotation leftEncoder(11);
 pros::Rotation rightEncoder(13);
@@ -32,7 +32,11 @@ float smallLiftSetpoint = 0;
 float smallLiftKP = 0.25;
 float bigLiftSetpoint = 0;
 
-pros::Motor driveTrain[] {driveFL, driveBR, driveBL, driveFR, driveML, driveMR};
+pros::Motor driveTrain[6] {driveFL, driveBR, driveBL, driveFR, driveML, driveMR};
+std::array<pros::Motor, 3> driveTrainL = {driveFL, driveML, driveBL};
+std::array<pros::Motor, 3> driveTrainR = {driveFR, driveMR, driveBR};
+
+pros::Rotation encoders[2] {leftEncoder, rightEncoder};
 
 //Auton selector
 typedef void(*FnPtr) ();

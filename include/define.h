@@ -16,7 +16,7 @@ extern pros::Motor bigLift1;
 extern pros::Motor bigLift2;
 extern pros::Motor intake;
 
-extern pros::ADIDigitalOut clip;
+extern pros::ADIDigitalOut frontClip;
 
 extern pros::Rotation leftEncoder;
 extern pros::Rotation rightEncoder;
@@ -34,7 +34,11 @@ extern float smallLiftSetpoint;
 extern float smallLiftKP;
 extern float bigLiftSetpoint;
 
-extern pros::Motor driveTrain[];
+extern pros::Motor driveTrain[6];
+extern std::array<pros::Motor, 3> driveTrainL;
+extern std::array<pros::Motor, 3> driveTrainR;
+
+extern pros::Rotation encoders[2];
 
 
 typedef void(*FnPtr) ();

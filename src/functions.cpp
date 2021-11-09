@@ -32,15 +32,11 @@ void DriveTrainPID(float setpoint)
     float power = (error * kP) + (integral * kI) + (derivative * kD);
     prevError = error;
 
-    for(pros::Motor m : driveTrain)
-      m.move_velocity(power);
+    for(auto &m : driveTrain) {m.move_velocity(power);}
 
     pros::lcd::set_text(1, std::to_string(((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2));
   }
-  driveFL.move_velocity(0);
-  driveBL.move_velocity(0);
-  driveFR.move_velocity(0);
-  driveBR.move_velocity(0);
+  //for(auto &m : driveTrain) {m.move_velocity(0);}
 }
 
 void TurnPID(int setpoint)
@@ -76,6 +72,89 @@ void TurnPID(int setpoint)
   driveBL.move_velocity(0);
   driveFR.move_velocity(0);
   driveBR.move_velocity(0);
+}
+
+void ArcMove(float turn, float smallArcD)
+{
+  //Find closest angle to turn towards
+  float turnSetpoint = std::abs(turn - imu.get_rotation());
+  if(turnSetpoint > 180)
+    turnSetpoint -= 360;
+
+  //Drivetrain PID variables
+  float driveKP = 1.0;
+  float driveKI = 0.0;
+  float driveKD = 0.0;
+
+  float driveError = 6;
+  float drivePrevError;
+
+
+  //Turn PID variables
+  float turnKP = 1.0;
+  float turnKI = 0.0;
+  float turnKD = 0.0;
+
+  float turnError = 6;
+  float turnPrevError;
+
+  //Set the encoder used to be the one following the shortest arc
+  int encoderIn;
+  std::array<pros::Motor, 3> largeArc = driveTrainL;
+  std::array<pros::Motor, 3> smallArc = driveTrainR;
+  if(turnSetpoint > 0)
+  {
+    encoderIn = 1;
+    std::array<pros::Motor, 3> largeArc = driveTrainL;
+    std::array<pros::Motor, 3> smallArc = driveTrainR;
+  }
+  else
+  {
+    encoderIn = 0;
+    std::array<pros::Motor, 3> largeArc = driveTrainR;
+    std::array<pros::Motor, 3> smallArc = driveTrainL;
+  }
+
+  while(std::abs(driveError) > 5)
+  {
+    //Calculate drivePower
+    driveError = smallArcD - (encoders[encoderIn].get_position() / 100);
+    float integral = integral + driveError;
+
+    if(driveError == 0)
+      integral = 0;
+
+    if(integral > 12000)
+		{
+			integral = 0;
+		}
+
+    float derivative = driveError - drivePrevError;
+    float drivePower = (driveError * driveKP) + (integral * driveKI) + (derivative * driveKD);
+    drivePrevError = driveError;
+
+
+
+    //Calculate turnPower
+    turnError = turnSetpoint - imu.get_rotation();
+    float turnIntegral = turnIntegral + turnError;
+
+    if(turnError == 0)
+      turnIntegral = 0;
+
+    if(turnIntegral > 12000)
+		{
+			turnIntegral = 0;
+		}
+
+    float turnDerivative = turnError - turnPrevError;
+    float turnPower = (turnError * turnKP) + (turnIntegral * turnKI) + (turnDerivative * turnKD);
+    turnPrevError = turnError;
+
+
+    for(auto &m : largeArc) {m.move_velocity(drivePower + turnPower);}
+    for(auto &m : smallArc) {m.move_velocity(drivePower);}
+  }
 }
 
 void SmallLiftPID(void* setpoint)

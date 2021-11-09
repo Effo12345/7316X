@@ -74,108 +74,6 @@ void autonomous() {
 	//PurePursuitInit();
 
 	autonPointers[autonSelect]();
-
-/*
-	clip.set_value(false);
-	driveTrainSetpoint = 1500; //Original: 1469
-	driveTrainTask = pros::c::task_create(DriveTrainPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Drivetrain");
-	pros::delay(500);
-
-	smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
-	smallLiftSetpoint = -1650;
-	smallLiftKP = 0.1;
-
-	bigLift1.move_velocity(-100);
-	bigLift2.move_velocity(-100);
-	pros::delay(500);
-	bigLift1.move_velocity(0);
-	bigLift2.move_velocity(0);
-
-	bigLift1.tare_position();
-	bigLift2.tare_position();
-
-	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) < (driveTrainSetpoint - 30))
-		pros::delay(20);
-	clip.set_value(true);
-	pros::delay(250);
-
-	driveTrainSetpoint = 750;
-
-	while((((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) > (driveTrainSetpoint))
-	{
-		if((bigLift1.get_position() + bigLift2.get_position()) / 2 < 400)
-		{
-			bigLift1.move_velocity(100);
-			bigLift2.move_velocity(100);
-		}
-		else
-		{
-			bigLift1.move_velocity(0);
-			bigLift2.move_velocity(0);
-		}
-		pros::delay(20);
-	}
-
-	pros::delay(100);
-
-	leftEncoder.reset_position();
-	rightEncoder.reset_position();
-	driveTrainSetpoint = 0;
-	pros::c::task_delete(driveTrainTask);
-	//pros::c::task_suspend(driveTrainTask);
-	pros::delay(250);
-
-
-
-	TurnPID(-60);
-	pros::lcd::set_text(7, "Turn finished");
-	//TurnPID(-1900, 230); //Original: -305, 230
-	//pros::lcd::set_text(1, "Turn completed");
-
-/*
-	bigLift1.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-
-	while((bigLift1.get_position() + bigLift2.get_position()) / 2 > 100)
-	{
-		pros::lcd::set_text(5, std::to_string((bigLift1.get_position() + bigLift2.get_position()) / 2));
-		pros::delay(10);
-	}
-	clip.set_value(false);
-
-
-	leftEncoder.reset_position();
-	rightEncoder.reset_position();
-
-	pros::delay(100);
-	driveTrainSetpoint = -400;
-	driveTrainKP = 0.5;
-	pros::c::task_resume(driveTrainTask);
-
-	while(std::abs(driveError) > 10)
-		pros::delay(20);
-
-	pros::lcd::set_text(1, "Moved back");
-	smallLiftSetpoint = -1115;
-	smallLiftKP = 0.25;
-	pros::lcd::set_text(1, "Moved lift up");
-	driveTrainSetpoint = 0;
-
-	//driveTrainSetpoint = 5;
-	//pros::c::task_resume(driveTrainTask);
-
-	intake.tare_position();
-	intake.move_velocity(200);
-
-	while((intake.get_position()) < 360)
-		pros::delay(20);
-
-	intake.move_velocity(0);
-	//big lift top position: 2269
-
-	pros::c::task_delete(driveTrainTask);
-	pros::c::task_delete(smallLiftTask);
-	*/
 }
 
 /**
@@ -192,11 +90,8 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	//Create lift tasks
-	smallLiftTask = pros::c::task_create(SmallLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Small lift");
-	pros::c::task_suspend(smallLiftTask);
-	smallLiftSetpoint = -1115;
-
+	//Create lift task
+	/*
 	bigLiftTask = pros::c::task_create(BigLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Big lift");
 	pros::c::task_suspend(bigLiftTask);
 
@@ -207,6 +102,7 @@ void opcontrol() {
 
 	bigLift1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	*/
 
 	while (true) {
 		//Updates the on-screen buttons
@@ -230,24 +126,6 @@ void opcontrol() {
 		int left = master.get_analog(ANALOG_LEFT_Y) * stickMultiplier;
 		int right = master.get_analog(ANALOG_RIGHT_Y) * stickMultiplier;
 
-		//-1330
-		//-1246 (better)
-		//Run small lift PID when the L1 or L2 buttons are pressed
-		if(master.get_digital_new_press(DIGITAL_L1) && !smallLiftValue)
-		{
-			smallLiftSetpoint = -1115;
-			smallLiftKP = 0.25;
-			smallLiftValue = true;
-			pros::c::task_resume(smallLiftTask);
-		}
-		else if(master.get_digital_new_press(DIGITAL_L2) && smallLiftValue)
-		{
-			smallLiftSetpoint = -1574;
-			smallLiftKP = 0.1;
-			smallLiftValue = false;
-			pros::c::task_resume(smallLiftTask);
-		}
-
 		//Calculate the movement of the lift based on the L1 and L2 buttons
 		int smallLiftValue = (master.get_digital(DIGITAL_L1) - master.get_digital(DIGITAL_L2));
 		int bigLiftValue = (master.get_digital(DIGITAL_R1) - master.get_digital(DIGITAL_R2));
@@ -255,17 +133,13 @@ void opcontrol() {
 		//Set the power of the drivetrain motors based on the controller sticks
 		if(stickMultiplier + 1)
 		{
-			driveFL.move(left);
-			driveBL.move(left);
-			driveFR.move(right);
-			driveBR.move(right);
+			for(auto &m : driveTrainL) {m.move_velocity(left);}
+			for(auto &m : driveTrainR) {m.move_velocity(right);}
 		}
 		else
 		{
-			driveFL.move(right);
-			driveBL.move(right);
-			driveFR.move(left);
-			driveBR.move(left);
+			for(auto &m : driveTrainL) {m.move_velocity(right);}
+			for(auto &m : driveTrainR) {m.move_velocity(left);}
 		}
 
 		//Set the power of the mobile goal lifts motor based on the value calculated above
@@ -274,10 +148,10 @@ void opcontrol() {
 		bigLift2.move_velocity(bigLiftValue * 100);
 
 		//Set the power of the ringle intake based on value calculated above
-		intake.move_velocity(600 * intakeToggle);
+		intake.move_velocity(200 * intakeToggle);
 
 		//Sets the state of the pneumatic clip based on the value calculated above
-		clip.set_value(clipToggle);
+		frontClip.set_value(clipToggle);
 
 		//pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
 
