@@ -6,16 +6,21 @@ bool failedLoopExit = false;
 float leftError = 6;
 float rightError = 6;
 
+
+//Use move_voltage
+//max: 12000
+
+//Set time limits for PID loops
 void DriveTrainPID(float setpoint)
 {
-  float kP = 0.5; //Original 1.2
-  float kI = 0.0;
-  float kD = 0.2; //Original 0.3
+  float kP = 0.35; //Original 1.2
+  float kI = 0.0005;
+  float kD = 0.07; //Original 0.3
 
   float error = 6;
   float prevError;
 
-  while(std::abs(error) > 5)
+  while(std::abs(error) > 3)
   {
     error = setpoint - (((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2);
     float integral = integral + error;
@@ -35,20 +40,24 @@ void DriveTrainPID(float setpoint)
     for(auto &m : driveTrain) {m.move_velocity(power);}
 
     pros::lcd::set_text(1, std::to_string(((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2));
+
+    pros::delay(15);
   }
-  //for(auto &m : driveTrain) {m.move_velocity(0);}
+  for(auto &m : driveTrain) {m.move_velocity(0);}
 }
 
+
+//Coarse turn PID first, then fine turn
 void TurnPID(int setpoint)
 {
-  float kP = 1.0;
+  float kP = 1.05;
   float kI = 0.0;
-  float kD = 0.0;
+  float kD = 0.3;
 
-  float error = 11;
+  float error = 5;
   float prevError;
 
-  while(true/*std::abs(error) > 10*/)
+  while(std::abs(error) > 3)
   {
     error = setpoint - imu.get_rotation();
     float integral = integral + rightError;
@@ -62,16 +71,14 @@ void TurnPID(int setpoint)
     pros::lcd::set_text(1, errorOut);
     pros::lcd::set_text(2, powerOut);
 
-    driveFL.move_velocity(power);
-    driveBL.move_velocity(power);
-    driveFR.move_velocity(-power);
-    driveBR.move_velocity(-power);
+    for(auto &m : driveTrainL) {m.move_velocity(power);}
+    for(auto &m : driveTrainR) {m.move_velocity(-power);}
 
+    pros::delay(15);
   }
-  driveFL.move_velocity(0);
-  driveBL.move_velocity(0);
-  driveFR.move_velocity(0);
-  driveBR.move_velocity(0);
+  for(auto &m : driveTrain) {m.move_velocity(0);}
+  leftEncoder.reset_position();
+  rightEncoder.reset_position();
 }
 
 void ArcMove(float turn, float smallArcD)
@@ -154,32 +161,11 @@ void ArcMove(float turn, float smallArcD)
 
     for(auto &m : largeArc) {m.move_velocity(drivePower + turnPower);}
     for(auto &m : smallArc) {m.move_velocity(drivePower);}
-  }
-}
-
-void SmallLiftPID(void* setpoint)
-{
-  float error = 0;
-
-  while(true )
-  {
-    error = smallLiftSetpoint - smallLift.get_position();
-
-    float power = (error * smallLiftKP);
-    smallLift.move_velocity(power);
-
-    pros::lcd::set_text(2, std::to_string(power));
-
-    if(std::abs(error) < 3)
-    {
-      loopExits ++;
-      pros::c::task_suspend(smallLiftTask);
-    }
 
     pros::delay(15);
   }
-  //liftMotor.move_velocity(0);
 }
+
 
 void BigLiftPID(void* setpoint)
 {
@@ -191,14 +177,13 @@ void BigLiftPID(void* setpoint)
 
   while(std::abs(error) > 5)
   {
-    error = bigLiftSetpoint - ((bigLift1.get_position() + bigLift2.get_position()) / 2);
+    error = bigLiftSetpoint - lift.get_position();
 
     float derivative = error - prevError;
     float power = (error * kP) + (derivative * kD);
     prevError = error;
 
-    bigLift1.move_velocity(power);
-    bigLift2.move_velocity(power);
+    lift.move_velocity(power);
 
     if(std::abs(error) < 3)
       pros::c::task_suspend(bigLiftTask);
@@ -207,6 +192,41 @@ void BigLiftPID(void* setpoint)
   }
 }
 
+void RingIntake(int rotations)
+{
+  intake.move_velocity(500);
+
+  pros::lcd::set_text(5, std::to_string(intake.get_position()));
+
+  while(intake.get_position() < (rotations * 360))
+    pros::delay(20);
+
+  intake.move_velocity(0);
+
+  intake.tare_position();
+}
+
+void Lift(liftState state)
+{
+  if(state == up)
+  {
+    lift.move_velocity(200);
+
+    while(lift.get_position() < 2350)
+      pros::delay(20);
+
+    lift.move_velocity(0);
+  }
+  else
+  {
+    lift.move_velocity(-200);
+
+    while(lift.get_position() > 5)
+      pros::delay(20);
+
+    lift.move_velocity(0);
+  }
+}
 
 
 
@@ -254,8 +274,9 @@ void OnCenterButton()
   //If the center button has been clicked before...
   else if(autonSelect == 2)
   {
-    //... give error message
-    pros::lcd::set_text(3, "Invalid selection");
+    //... Then run double grab auton
+    autonSelect = 12;
+    pros::lcd::set_text(3, "Double grab");
   }
 	//If right button was pressed before this...
 	else if(autonSelect == 3)

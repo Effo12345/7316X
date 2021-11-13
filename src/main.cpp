@@ -3,8 +3,8 @@
 
 int stickMultiplier = 1;
 bool intakeToggle = false;
-bool clipToggle = true;
-bool smallLiftValue = true;
+bool frontClipToggle = true;
+bool backClipToggle = false;
 //bool bigLiftValue = false;
 
 
@@ -22,16 +22,15 @@ void initialize() {
 	pros::lcd::register_btn2_cb(OnRightButton);
 
 	//Set the braking mode for the mobile goal lift so it holds its position when no button is being pressed
-	smallLift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	bigLift1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-	smallLift.tare_position();
 
 	leftEncoder.reset_position();
-	leftEncoder.set_reversed(true);
+	rightEncoder.set_reversed(true);
 	rightEncoder.reset_position();
 	backEncoder.reset();
+
+	frontClip.set_value(true);
 
 	imu.reset();
 }
@@ -52,12 +51,7 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {
-	/*
-	pros::lcd::set_text(1, "Ran autonon");
-	autonomous();
-	*/
-}
+void competition_initialize() {}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -118,44 +112,48 @@ void opcontrol() {
 		if(master.get_digital_new_press(DIGITAL_B))
 			intakeToggle = !intakeToggle;
 
-			//Button to toggle the pneumatic clip
-			if(master.get_digital_new_press(DIGITAL_Y))
-				clipToggle = !clipToggle;
+			//Button to toggle the front pneumatic clip
+			if(master.get_digital_new_press(DIGITAL_R1))
+				frontClipToggle = !frontClipToggle;
+
+			//Button to toggle the back pneumatic clip
+			if(master.get_digital_new_press(DIGITAL_R2))
+				backClipToggle = !backClipToggle;
+
 
 		//Get the values of the y-axes of the left and right sticks, and store them in left and right respectively
 		int left = master.get_analog(ANALOG_LEFT_Y) * stickMultiplier;
 		int right = master.get_analog(ANALOG_RIGHT_Y) * stickMultiplier;
 
 		//Calculate the movement of the lift based on the L1 and L2 buttons
-		int smallLiftValue = (master.get_digital(DIGITAL_L1) - master.get_digital(DIGITAL_L2));
-		int bigLiftValue = (master.get_digital(DIGITAL_R1) - master.get_digital(DIGITAL_R2));
+		int liftValue = (master.get_digital(DIGITAL_L1) - master.get_digital(DIGITAL_L2));
 
 		//Set the power of the drivetrain motors based on the controller sticks
 		if(stickMultiplier + 1)
 		{
-			for(auto &m : driveTrainL) {m.move_velocity(left);}
-			for(auto &m : driveTrainR) {m.move_velocity(right);}
+			for(auto &m : driveTrainL) {m.move(left);}
+			for(auto &m : driveTrainR) {m.move(right);}
 		}
 		else
 		{
-			for(auto &m : driveTrainL) {m.move_velocity(right);}
-			for(auto &m : driveTrainR) {m.move_velocity(left);}
+			for(auto &m : driveTrainL) {m.move(right);}
+			for(auto &m : driveTrainR) {m.move(left);}
 		}
 
 		//Set the power of the mobile goal lifts motor based on the value calculated above
 		//smallLift.move_velocity(smallLiftValue * 100);
-		bigLift1.move_velocity(bigLiftValue * 100);
-		bigLift2.move_velocity(bigLiftValue * 100);
+		lift.move_velocity(liftValue * 200);
 
 		//Set the power of the ringle intake based on value calculated above
-		intake.move_velocity(200 * intakeToggle);
+		intake.move_velocity(500 * intakeToggle);
 
 		//Sets the state of the pneumatic clip based on the value calculated above
-		frontClip.set_value(clipToggle);
+		frontClip.set_value(frontClipToggle);
+		backClip.set_value(backClipToggle);
 
 		//pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
 
-		pros::lcd::set_text(1, std::to_string(leftEncoder.get_position() / 100));
+		pros::lcd::set_text(1, std::to_string(lift.get_position()));
 		pros::lcd::set_text(2, std::to_string(rightEncoder.get_position() / 100));
 		pros::lcd::set_text(3, std::to_string(backEncoder.get_value()));
 		pros::lcd::set_text(4, std::to_string(imu.get_rotation()));

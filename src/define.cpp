@@ -2,34 +2,34 @@
 #include "define.h"
 #include "autonomous.h"
 //Motor and controller declarations
+//Port 5 is broken
 pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::Motor driveFL(15);
-pros::Motor driveML(1, true);
-pros::Motor driveBL(17);
-pros::Motor driveFR(18, true);
-pros::Motor driveMR(2);
-pros::Motor driveBR(16, true);
-pros::Motor smallLift(2);
-pros::Motor bigLift1(10);
-pros::Motor bigLift2(19, true);
-pros::Motor intake(12);
+pros::Motor driveFL(20, true);
+pros::Motor driveML(19);
+pros::Motor driveBL(16, true);
+pros::Motor driveFR(1);
+pros::Motor driveMR(8, true);
+pros::Motor driveBR(4);
+pros::Motor lift(10);
+pros::Motor intake(3, pros::E_MOTOR_GEARSET_06, true);
 
-pros::ADIDigitalOut frontClip(3);
+pros::ADIDigitalOut frontClip(2);
+pros::ADIDigitalOut backClip(1);
 
-pros::Rotation leftEncoder(11);
-pros::Rotation rightEncoder(13);
-pros::ADIEncoder backEncoder(1, 2, true);
+pros::Rotation leftEncoder(2);
+pros::Rotation rightEncoder(18);
+pros::ADIEncoder backEncoder(3, 4, true);
 
-pros::Imu imu(14);
+pros::Imu imu(15);
 
+/*
 pros::task_t smallLiftTask;
 pros::task_t bigLiftTask;
 pros::task_t driveTrainTask;
 pros::task_t purePursuitTask;
 pros::task_t odometryTask;
+*/
 
-float smallLiftSetpoint = 0;
-float smallLiftKP = 0.25;
 float bigLiftSetpoint = 0;
 
 pros::Motor driveTrain[6] {driveFL, driveBR, driveBL, driveFR, driveML, driveMR};
@@ -40,8 +40,8 @@ pros::Rotation encoders[2] {leftEncoder, rightEncoder};
 
 //Auton selector
 typedef void(*FnPtr) ();
-void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint}, (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull}, (*none) (){None};
-FnPtr autonPointers[] {none, none, none, none, none, none, none, grabL, grabR, winPointL, none, winPointR};
+void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint}, (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull}, (*fullR) (){&LeftFull}, (*dGrab) (){&DoubleGrab}, (*none) (){None};
+FnPtr autonPointers[] {none, none, none, none, fullL, none, fullR, grabL, grabR, winPointL, none, winPointR, dGrab};
 int autonSelect = 0;
 
 FILE* targetVelocityL = fopen("/usd/telem/targetVelocityTelemL.txt", "w");

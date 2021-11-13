@@ -10,6 +10,8 @@ extern void TurnTestPID(float setpoint);
 extern void SmallLiftPID(void* setpoint);
 extern void SmallLiftPIDA(float setppoint);
 extern void BigLiftPID(void* setpoint);
+extern void RingIntake(int rotations);
+extern void Lift(liftState state);
 
 //Auton select
 extern void OnLeftButton();

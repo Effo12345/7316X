@@ -11,12 +11,11 @@ extern pros::Motor driveBL;
 extern pros::Motor driveFR;
 extern pros::Motor driveMR;
 extern pros::Motor driveBR;
-extern pros::Motor smallLift;
-extern pros::Motor bigLift1;
-extern pros::Motor bigLift2;
+extern pros::Motor lift;
 extern pros::Motor intake;
 
 extern pros::ADIDigitalOut frontClip;
+extern pros::ADIDigitalOut backClip;
 
 extern pros::Rotation leftEncoder;
 extern pros::Rotation rightEncoder;
@@ -30,8 +29,6 @@ extern pros::task_t driveTrainTask;
 extern pros::task_t purePursuitTask;
 extern pros::task_t odometryTask;
 
-extern float smallLiftSetpoint;
-extern float smallLiftKP;
 extern float bigLiftSetpoint;
 
 extern pros::Motor driveTrain[6];
@@ -45,6 +42,8 @@ typedef void(*FnPtr) ();
 extern void (*grabL) (), (*grabR) (), (*winPointL) (), (*winPointR) (), (*fullL) (), (*none) ();
 extern FnPtr autonPointers[];
 extern int autonSelect;
+
+enum liftState { up, down };
 
 extern double wheelConversionFactor;
 

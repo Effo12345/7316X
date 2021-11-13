@@ -141,11 +141,11 @@
             "-funwind-tables",
             "--std=gnu++17",
             "-o",
-            "bin/functions.cpp.o",
-            "src\\functions.cpp"
+            "bin/main.cpp.o",
+            "src\\main.cpp"
         ],
         "directory": "C:\\7316X",
-        "file": "src\\functions.cpp"
+        "file": "src\\main.cpp"
     },
     {
         "arguments": [
@@ -215,10 +215,10 @@
             "-funwind-tables",
             "--std=gnu++17",
             "-o",
-            "bin/main.cpp.o",
-            "src\\main.cpp"
+            "bin/functions.cpp.o",
+            "src\\functions.cpp"
         ],
         "directory": "C:\\7316X",
-        "file": "src\\main.cpp"
+        "file": "src\\functions.cpp"
     }
 ]
