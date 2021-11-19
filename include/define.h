@@ -39,11 +39,11 @@ extern pros::Rotation encoders[2];
 
 
 typedef void(*FnPtr) ();
-extern void (*grabL) (), (*grabR) (), (*winPointL) (), (*winPointR) (), (*fullL) (), (*none) ();
+extern void (*grabL) (), (*grabR) (), (*winPointL) (), (*winPointR) (), (*fullL) (), (*fullR) (), (*dGrab) (), (*none) ();
 extern FnPtr autonPointers[];
 extern int autonSelect;
 
-enum liftState { up, down };
+enum liftState { up, down, low };
 
 extern double wheelConversionFactor;
 

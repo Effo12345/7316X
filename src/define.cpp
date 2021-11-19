@@ -10,7 +10,7 @@ pros::Motor driveBL(16, true);
 pros::Motor driveFR(1);
 pros::Motor driveMR(8, true);
 pros::Motor driveBR(4);
-pros::Motor lift(10);
+pros::Motor lift(6);
 pros::Motor intake(3, pros::E_MOTOR_GEARSET_06, true);
 
 pros::ADIDigitalOut frontClip(2);
@@ -40,8 +40,8 @@ pros::Rotation encoders[2] {leftEncoder, rightEncoder};
 
 //Auton selector
 typedef void(*FnPtr) ();
-void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint}, (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull}, (*fullR) (){&LeftFull}, (*dGrab) (){&DoubleGrab}, (*none) (){None};
-FnPtr autonPointers[] {none, none, none, none, fullL, none, fullR, grabL, grabR, winPointL, none, winPointR, dGrab};
+void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint}, (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull}, (*fullR) (){&LeftFull}, (*dGrab) (){&DoubleGrab}, (*fGrabL) (){&FullGrab}, (*none) (){None};
+FnPtr autonPointers[] {none, none, none, none, fullL, fGrabL, fullR, grabL, grabR, winPointL, dGrab, winPointR, dGrab};
 int autonSelect = 0;
 
 FILE* targetVelocityL = fopen("/usd/telem/targetVelocityTelemL.txt", "w");

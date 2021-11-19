@@ -4,6 +4,7 @@
 #define FUNCTIONS_H
 
 extern void DriveTrainPID(float setpoint);
+extern void WallPush();
 extern void ArcMove(float turn, float smallarcD);
 extern void TurnPID(int setpoint);
 extern void TurnTestPID(float setpoint);

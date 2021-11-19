@@ -1,11 +1,10 @@
 #include "define.h"
 
-int loopExits = 0;
-bool failedLoopExit = false;
-
-float leftError = 6;
-float rightError = 6;
-
+template <class N>
+N InToDeg (N input) {
+  N output = input * wheelConversionFactor;
+  return output;
+}
 
 //Use move_voltage
 //max: 12000
@@ -13,14 +12,19 @@ float rightError = 6;
 //Set time limits for PID loops
 void DriveTrainPID(float setpoint)
 {
-  float kP = 0.35; //Original 1.2
-  float kI = 0.0005;
-  float kD = 0.07; //Original 0.3
+  float kP = 25.0;
+  float kI = 0.0;
+  float kD = 3.0;
 
-  float error = 6;
+  float error = 11;
   float prevError;
 
-  while(std::abs(error) > 3)
+
+  setpoint = InToDeg(setpoint);
+
+  pros::lcd::set_text(1, std::to_string(setpoint));
+
+  while(std::abs(error) > 10)
   {
     error = setpoint - (((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2);
     float integral = integral + error;
@@ -37,22 +41,35 @@ void DriveTrainPID(float setpoint)
     float power = (error * kP) + (integral * kI) + (derivative * kD);
     prevError = error;
 
-    for(auto &m : driveTrain) {m.move_velocity(power);}
+    for(auto &m : driveTrain) {m.move_voltage(power);}
 
-    pros::lcd::set_text(1, std::to_string(((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2));
+    if(error < 0)
+      pros::lcd::set_text(6, std::to_string(error));
+    else
+      pros::lcd::set_text(6, "No steady state");
+
+    pros::lcd::set_text(2, std::to_string(((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2));
+    pros::lcd::set_text(3, std::to_string(power));
+    pros::lcd::set_text(4, std::to_string(error));
 
     pros::delay(15);
   }
-  for(auto &m : driveTrain) {m.move_velocity(0);}
+  for(auto &m : driveTrain) {m.move_voltage(0);}
 }
 
+void WallPush()
+{
+  for(auto &m : driveTrain) {m.move_voltage(-12000);}
+  pros::delay(700);
+  for(auto &m : driveTrain) {m.move_voltage(0);}
+}
 
 //Coarse turn PID first, then fine turn
 void TurnPID(int setpoint)
 {
-  float kP = 1.05;
+  float kP = 120.0;
   float kI = 0.0;
-  float kD = 0.3;
+  float kD = 8.0;
 
   float error = 5;
   float prevError;
@@ -60,23 +77,25 @@ void TurnPID(int setpoint)
   while(std::abs(error) > 3)
   {
     error = setpoint - imu.get_rotation();
-    float integral = integral + rightError;
+    float integral = integral + error;
 
     float derivative = error - prevError;
     float power = (error * kP) + (integral * kI) + (derivative * kD);
     prevError = error;
 
+    std::string aOut = "A: " + std::to_string(imu.get_rotation());
     std::string errorOut = "Error: " + std::to_string(error);
     std::string powerOut = "Power: " + std::to_string(power);
-    pros::lcd::set_text(1, errorOut);
-    pros::lcd::set_text(2, powerOut);
+    pros::lcd::set_text(1, aOut);
+    pros::lcd::set_text(2, errorOut);
+    pros::lcd::set_text(3, powerOut);
 
-    for(auto &m : driveTrainL) {m.move_velocity(power);}
-    for(auto &m : driveTrainR) {m.move_velocity(-power);}
+    for(auto &m : driveTrainL) {m.move_voltage(power);}
+    for(auto &m : driveTrainR) {m.move_voltage(-power);}
 
     pros::delay(15);
   }
-  for(auto &m : driveTrain) {m.move_velocity(0);}
+  for(auto &m : driveTrain) {m.move_voltage(0);}
   leftEncoder.reset_position();
   rightEncoder.reset_position();
 }
@@ -212,16 +231,25 @@ void Lift(liftState state)
   {
     lift.move_velocity(200);
 
-    while(lift.get_position() < 2350)
+    while(lift.get_position() < 2150)
+      pros::delay(20);
+
+    lift.move_velocity(0);
+  }
+  else if(state == down)
+  {
+    lift.move_velocity(-200);
+
+    while(lift.get_position() > 5)
       pros::delay(20);
 
     lift.move_velocity(0);
   }
   else
   {
-    lift.move_velocity(-200);
+    lift.move_velocity(200);
 
-    while(lift.get_position() > 5)
+    while(lift.get_position() < 100)
       pros::delay(20);
 
     lift.move_velocity(0);
@@ -235,23 +263,23 @@ void OnLeftButton()
 	//If left button has been clicked before...
 	if(autonSelect == 1)
 	{
-		//...then run left full auton
+		//...then run left Primary auton
 		autonSelect = 4;
-		pros::lcd::set_text(3, "Full auton");
+		pros::lcd::set_text(3, "Primary auton");
 	}
   //If the center button has been clicked before...
   else if(autonSelect == 2)
   {
-    //... then run left full win point auton
+    //... then run left Double Grab auton
     autonSelect = 5;
-    pros::lcd::set_text(3, "Full win point");
+    pros::lcd::set_text(3, "Full Grab L");
   }
 	//If right button was clicked before this...
   else if(autonSelect == 3)
   {
-		//...then run right full auton
+		//...then run right primary auton
 		autonSelect = 6;
-    pros::lcd::set_text(3, "Full auton");
+    pros::lcd::set_text(3, "Primary auton");
   }
 	//If this is the first button being pressed...
 	else if(autonSelect == 0)
@@ -274,9 +302,9 @@ void OnCenterButton()
   //If the center button has been clicked before...
   else if(autonSelect == 2)
   {
-    //... Then run double grab auton
+    //... Then run full win point auton
     autonSelect = 12;
-    pros::lcd::set_text(3, "Double grab");
+    pros::lcd::set_text(3, "Full Win Point");
   }
 	//If right button was pressed before this...
 	else if(autonSelect == 3)
@@ -288,9 +316,9 @@ void OnCenterButton()
 	//If this is the first button being pressed...
 	else if(autonSelect == 0)
 	{
-		//...then set the value to win point
+		//...then set the value to Misc
 		autonSelect = 2;
-		pros::lcd::set_text(2, "Full win point");
+		pros::lcd::set_text(2, "Misc");
 	}
 }
 
@@ -306,9 +334,9 @@ void OnRightButton()
   //If the center button has been clicked before...
   else if(autonSelect == 2)
   {
-    //... then run right full win point auton
+    //... then run right full grab
     autonSelect = 10;
-    pros::lcd::set_text(3, "Right");
+    pros::lcd::set_text(3, "Double Grab R");
   }
   //If right button has been clicked before this...
   else if(autonSelect == 3)

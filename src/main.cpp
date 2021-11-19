@@ -2,6 +2,7 @@
 #include "purepursuit.h"
 
 int stickMultiplier = 1;
+int stickScale = 4;
 bool intakeToggle = false;
 bool frontClipToggle = true;
 bool backClipToggle = false;
@@ -66,7 +67,7 @@ void competition_initialize() {}
  */
 void autonomous() {
 	//PurePursuitInit();
-
+	
 	autonPointers[autonSelect]();
 }
 
@@ -145,7 +146,7 @@ void opcontrol() {
 		lift.move_velocity(liftValue * 200);
 
 		//Set the power of the ringle intake based on value calculated above
-		intake.move_velocity(500 * intakeToggle);
+		intake.move_velocity(400 * intakeToggle);
 
 		//Sets the state of the pneumatic clip based on the value calculated above
 		frontClip.set_value(frontClipToggle);
@@ -153,7 +154,7 @@ void opcontrol() {
 
 		//pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
 
-		pros::lcd::set_text(1, std::to_string(lift.get_position()));
+		pros::lcd::set_text(1, std::to_string(imu.get_rotation()));
 		pros::lcd::set_text(2, std::to_string(rightEncoder.get_position() / 100));
 		pros::lcd::set_text(3, std::to_string(backEncoder.get_value()));
 		pros::lcd::set_text(4, std::to_string(imu.get_rotation()));
