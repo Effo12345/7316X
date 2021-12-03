@@ -1,12 +1,11 @@
 #include "functions.h"
 #include "purepursuit.h"
 
+//Declarations of variables used in driver control
 int stickMultiplier = 1;
-int stickScale = 4;
 bool intakeToggle = false;
 bool frontClipToggle = true;
 bool backClipToggle = false;
-//bool bigLiftValue = false;
 
 
 /**
@@ -16,6 +15,7 @@ bool backClipToggle = false;
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+	//Initialize the brain display and register buttons for auton selector
 	pros::lcd::initialize();
 
 	pros::lcd::register_btn0_cb(OnLeftButton);
@@ -25,15 +25,15 @@ void initialize() {
 	//Set the braking mode for the mobile goal lift so it holds its position when no button is being pressed
 	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-
+	//Calibrate and tare all sensors to ensure accurate data during autonomous
 	leftEncoder.reset_position();
 	rightEncoder.set_reversed(true);
 	rightEncoder.reset_position();
 	backEncoder.reset();
 
-	frontClip.set_value(true);
-
 	imu.reset();
+
+	frontClip.set_value(true);
 }
 
 /**
@@ -68,6 +68,7 @@ void competition_initialize() {}
 void autonomous() {
 	//PurePursuitInit();
 	
+	//Execute the autonomous program previously set by the auton selector
 	autonPointers[autonSelect]();
 }
 
@@ -113,13 +114,17 @@ void opcontrol() {
 		if(master.get_digital_new_press(DIGITAL_B))
 			intakeToggle = !intakeToggle;
 
-			//Button to toggle the front pneumatic clip
-			if(master.get_digital_new_press(DIGITAL_R1))
-				frontClipToggle = !frontClipToggle;
+		//Button to toggle the front pneumatic clip
+		if(master.get_digital_new_press(DIGITAL_R1))
+			frontClipToggle = !frontClipToggle;
 
-			//Button to toggle the back pneumatic clip
-			if(master.get_digital_new_press(DIGITAL_R2))
-				backClipToggle = !backClipToggle;
+		//Button to toggle the back pneumatic clip
+		if(master.get_digital_new_press(DIGITAL_R2))
+			backClipToggle = !backClipToggle;
+
+		//Run a ring grabbing function for using driver loads
+		if(master.get_digital_new_press(DIGITAL_DOWN))
+			RingGrab();
 
 
 		//Get the values of the y-axes of the left and right sticks, and store them in left and right respectively
@@ -142,19 +147,17 @@ void opcontrol() {
 		}
 
 		//Set the power of the mobile goal lifts motor based on the value calculated above
-		//smallLift.move_velocity(smallLiftValue * 100);
 		lift.move_velocity(liftValue * 200);
 
 		//Set the power of the ringle intake based on value calculated above
-		intake.move_velocity(400 * intakeToggle);
+		intake.move_velocity(600 * intakeToggle);
 
 		//Sets the state of the pneumatic clip based on the value calculated above
 		frontClip.set_value(frontClipToggle);
 		backClip.set_value(backClipToggle);
 
-		//pros::lcd::set_text(1, std::to_string(smallLift.get_position()));
-
-		pros::lcd::set_text(1, std::to_string(imu.get_rotation()));
+		//Telemtry commands that output data onto the brain screen
+		pros::lcd::set_text(1, std::to_string(leftEncoder.get_position() / 100));
 		pros::lcd::set_text(2, std::to_string(rightEncoder.get_position() / 100));
 		pros::lcd::set_text(3, std::to_string(backEncoder.get_value()));
 		pros::lcd::set_text(4, std::to_string(imu.get_rotation()));

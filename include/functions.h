@@ -4,14 +4,14 @@
 #define FUNCTIONS_H
 
 extern void DriveTrainPID(float setpoint);
-extern void WallPush();
-extern void ArcMove(float turn, float smallarcD);
-extern void TurnPID(int setpoint);
-extern void TurnTestPID(float setpoint);
-extern void SmallLiftPID(void* setpoint);
-extern void SmallLiftPIDA(float setppoint);
-extern void BigLiftPID(void* setpoint);
+extern void WallPush(int time);
+extern void PlatformGrab();
+extern void ArcMove(float left, float right, turnDirection direction);
+extern void CoarseTurn(int setpoint);
+extern void FineTurn(int setpoint);
+extern void PTurn(int setpoint);
 extern void RingIntake(int rotations);
+extern void RingGrab();
 extern void Lift(liftState state);
 
 //Auton select

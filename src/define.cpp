@@ -13,9 +13,11 @@ pros::Motor driveBR(4);
 pros::Motor lift(6);
 pros::Motor intake(3, pros::E_MOTOR_GEARSET_06, true);
 
+//Pneumatics delcarations
 pros::ADIDigitalOut frontClip(2);
 pros::ADIDigitalOut backClip(1);
 
+//Sensor declarations
 pros::Rotation leftEncoder(2);
 pros::Rotation rightEncoder(18);
 pros::ADIEncoder backEncoder(3, 4, true);
@@ -23,6 +25,7 @@ pros::ADIEncoder backEncoder(3, 4, true);
 pros::Imu imu(15);
 
 /*
+//Multithreading task declaration
 pros::task_t smallLiftTask;
 pros::task_t bigLiftTask;
 pros::task_t driveTrainTask;
@@ -30,13 +33,12 @@ pros::task_t purePursuitTask;
 pros::task_t odometryTask;
 */
 
-float bigLiftSetpoint = 0;
 
+//Declaration of drive train/sensor arrays for easier access
 pros::Motor driveTrain[6] {driveFL, driveBR, driveBL, driveFR, driveML, driveMR};
 std::array<pros::Motor, 3> driveTrainL = {driveFL, driveML, driveBL};
 std::array<pros::Motor, 3> driveTrainR = {driveFR, driveMR, driveBR};
 
-pros::Rotation encoders[2] {leftEncoder, rightEncoder};
 
 //Auton selector
 typedef void(*FnPtr) ();
@@ -44,13 +46,17 @@ void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPo
 FnPtr autonPointers[] {none, none, none, none, fullL, fGrabL, fullR, grabL, grabR, winPointL, dGrab, winPointR, dGrab};
 int autonSelect = 0;
 
+//File I/O for data output
 FILE* targetVelocityL = fopen("/usd/telem/targetVelocityTelemL.txt", "w");
 FILE* targetVelocityR = fopen("/usd/telem/targetVelocityTelemR.txt", "w");
 FILE* measuredVelocityL = fopen("/usd/telem/measuredVelocityTelemL.txt", "w");
 FILE* measuredVelocityR = fopen("/usd/telem/measuredVelocityTelemR.txt", "w");
 
+//Convert between degrees per second and rotations per minute
 double DPStoRPM = 0.166666667;
 
+//Definition of struct "position" for use in odometry code
 sPos position;
 
+//Conversion factor from degrees of wheel rotation to inches
 double wheelConversionFactor = 28.648;

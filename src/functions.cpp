@@ -1,22 +1,29 @@
 #include "define.h"
 
+//Template functions to convert between inches and degrees
 template <class N>
 N InToDeg (N input) {
   N output = input * wheelConversionFactor;
   return output;
 }
 
-//Use move_voltage
-//max: 12000
+template <class N>
+N DegToIn (N input) {
+  N output = input / wheelConversionFactor;
+  return output;
+}
 
-//Set time limits for PID loops
+
+//Set time limits for PID loops (idea)
+
+//Main DriveTrain movement PID
 void DriveTrainPID(float setpoint)
 {
   float kP = 25.0;
   float kI = 0.0;
   float kD = 3.0;
 
-  float error = 11;
+  float error = 16;
   float prevError;
 
 
@@ -24,7 +31,7 @@ void DriveTrainPID(float setpoint)
 
   pros::lcd::set_text(1, std::to_string(setpoint));
 
-  while(std::abs(error) > 10)
+  while(std::abs(error) > 15)
   {
     error = setpoint - (((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2);
     float integral = integral + error;
@@ -57,24 +64,26 @@ void DriveTrainPID(float setpoint)
   for(auto &m : driveTrain) {m.move_voltage(0);}
 }
 
-void WallPush()
+//Forces the robot into walls to grab mobile goals with the back clip
+void WallPush(int time)
 {
   for(auto &m : driveTrain) {m.move_voltage(-12000);}
-  pros::delay(700);
+  pros::delay(time);
   for(auto &m : driveTrain) {m.move_voltage(0);}
 }
 
-//Coarse turn PID first, then fine turn
-void TurnPID(int setpoint)
+
+//Coarse turn PID for turns of at least 90 degrees and Fine turn for less than that
+void CoarseTurn(int setpoint)
 {
-  float kP = 120.0;
+  float kP = 100.0;
   float kI = 0.0;
   float kD = 8.0;
 
   float error = 5;
   float prevError;
 
-  while(std::abs(error) > 3)
+  while(std::abs(error) > 0.5)
   {
     error = setpoint - imu.get_rotation();
     float integral = integral + error;
@@ -100,119 +109,128 @@ void TurnPID(int setpoint)
   rightEncoder.reset_position();
 }
 
-void ArcMove(float turn, float smallArcD)
+void FineTurn(int setpoint)
 {
-  //Find closest angle to turn towards
-  float turnSetpoint = std::abs(turn - imu.get_rotation());
-  if(turnSetpoint > 180)
-    turnSetpoint -= 360;
+  float kP = 170.0;
+  float kI = 1.0;
+  float kD = 6.0;
 
-  //Drivetrain PID variables
-  float driveKP = 1.0;
-  float driveKI = 0.0;
-  float driveKD = 0.0;
+  float error = 5;
+  float prevError;
 
-  float driveError = 6;
-  float drivePrevError;
-
-
-  //Turn PID variables
-  float turnKP = 1.0;
-  float turnKI = 0.0;
-  float turnKD = 0.0;
-
-  float turnError = 6;
-  float turnPrevError;
-
-  //Set the encoder used to be the one following the shortest arc
-  int encoderIn;
-  std::array<pros::Motor, 3> largeArc = driveTrainL;
-  std::array<pros::Motor, 3> smallArc = driveTrainR;
-  if(turnSetpoint > 0)
+  while(std::abs(error) > 0.5)
   {
-    encoderIn = 1;
-    std::array<pros::Motor, 3> largeArc = driveTrainL;
-    std::array<pros::Motor, 3> smallArc = driveTrainR;
+    error = setpoint - imu.get_rotation();
+    float integral = integral + error;
+
+    float derivative = error - prevError;
+    float power = (error * kP) + (integral * kI) + (derivative * kD);
+    prevError = error;
+
+    std::string aOut = "A: " + std::to_string(imu.get_rotation());
+    std::string errorOut = "Error: " + std::to_string(error);
+    std::string powerOut = "Power: " + std::to_string(power);
+    pros::lcd::set_text(1, aOut);
+    pros::lcd::set_text(2, errorOut);
+    pros::lcd::set_text(3, powerOut);
+
+    for(auto &m : driveTrainL) {m.move_voltage(power);}
+    for(auto &m : driveTrainR) {m.move_voltage(-power);}
+
+    pros::delay(15);
   }
-  else
+  for(auto &m : driveTrain) {m.move_voltage(0);}
+  leftEncoder.reset_position();
+  rightEncoder.reset_position();
+}
+
+//Perpendicular turn (multiples of 90 degrees)
+void PTurn(int setpoint)
+{
+  float kP = 115.3;
+  float kI = 0.0;
+  float kD = 8.0;
+
+  float error = 5;
+  float prevError;
+
+  while(std::abs(error) > 0.5)
   {
-    encoderIn = 0;
-    std::array<pros::Motor, 3> largeArc = driveTrainR;
-    std::array<pros::Motor, 3> smallArc = driveTrainL;
+    error = setpoint - imu.get_rotation();
+    float integral = integral + error;
+
+    float derivative = error - prevError;
+    float power = (error * kP) + (integral * kI) + (derivative * kD);
+    prevError = error;
+
+    std::string aOut = "A: " + std::to_string(imu.get_rotation());
+    std::string errorOut = "Error: " + std::to_string(error);
+    std::string powerOut = "Power: " + std::to_string(power);
+    pros::lcd::set_text(1, aOut);
+    pros::lcd::set_text(2, errorOut);
+    pros::lcd::set_text(3, powerOut);
+
+    for(auto &m : driveTrainL) {m.move_voltage(power);}
+    for(auto &m : driveTrainR) {m.move_voltage(-power);}
+
+    pros::delay(15);
   }
+  for(auto &m : driveTrain) {m.move_voltage(0);}
+  leftEncoder.reset_position();
+  rightEncoder.reset_position();
+}
 
-  while(std::abs(driveError) > 5)
+//The robot arcs as it moves for more efficient routes
+void ArcMove(float setpoint, float reduction, turnDirection direction)
+{
+  //Left PID variables
+  float kP = 25.0;
+  float kI = 0.0;
+  float kD = 3.0;
+
+  float error = 10;
+  float prevError;
+
+
+  //PID loop
+  while(std::abs(error) > 5)
   {
-    //Calculate drivePower
-    driveError = smallArcD - (encoders[encoderIn].get_position() / 100);
-    float integral = integral + driveError;
+    error = setpoint - (rightEncoder.get_position() / 100);
+    float integral = integral + error;
 
-    if(driveError == 0)
+    if(error == 0)
       integral = 0;
 
     if(integral > 12000)
-		{
 			integral = 0;
-		}
-
-    float derivative = driveError - drivePrevError;
-    float drivePower = (driveError * driveKP) + (integral * driveKI) + (derivative * driveKD);
-    drivePrevError = driveError;
-
-
-
-    //Calculate turnPower
-    turnError = turnSetpoint - imu.get_rotation();
-    float turnIntegral = turnIntegral + turnError;
-
-    if(turnError == 0)
-      turnIntegral = 0;
-
-    if(turnIntegral > 12000)
-		{
-			turnIntegral = 0;
-		}
-
-    float turnDerivative = turnError - turnPrevError;
-    float turnPower = (turnError * turnKP) + (turnIntegral * turnKI) + (turnDerivative * turnKD);
-    turnPrevError = turnError;
-
-
-    for(auto &m : largeArc) {m.move_velocity(drivePower + turnPower);}
-    for(auto &m : smallArc) {m.move_velocity(drivePower);}
-
-    pros::delay(15);
-  }
-}
-
-
-void BigLiftPID(void* setpoint)
-{
-  float error = 0;
-  float prevError;
-
-  float kP = 0.4;
-  float kD = 0.0;
-
-  while(std::abs(error) > 5)
-  {
-    error = bigLiftSetpoint - lift.get_position();
 
     float derivative = error - prevError;
-    float power = (error * kP) + (derivative * kD);
+    float power = (error * kP) + (integral * kI) + (derivative * kD);
     prevError = error;
 
-    lift.move_velocity(power);
 
-    if(std::abs(error) < 3)
-      pros::c::task_suspend(bigLiftTask);
+    //Assign power based on turning direction
+    if(direction == left)
+    {
+      for(auto &m : driveTrainL) {m.move_voltage(power * reduction);}
+      for(auto &m : driveTrainR) {m.move_voltage(power);}
+    }
+    else
+    {
+      for(auto &m : driveTrainL) {m.move_voltage(power);}
+      for(auto &m : driveTrainR) {m.move_voltage(power * reduction);}
+    }
 
     pros::delay(15);
   }
+  //for(auto &m : driveTrain) {m.move_voltage(0);}
 }
 
+//Runs the ring intake for a certain number of rotation
 void RingIntake(int rotations)
 {
+  intake.tare_position();
+
   intake.move_velocity(500);
 
   pros::lcd::set_text(5, std::to_string(intake.get_position()));
@@ -221,10 +239,26 @@ void RingIntake(int rotations)
     pros::delay(20);
 
   intake.move_velocity(0);
-
-  intake.tare_position();
 }
 
+//Grab driver load rings during driver control
+void RingGrab()
+{
+  leftEncoder.reset_position();
+  rightEncoder.reset_position();
+  intake.move_velocity(600);
+  while(master.get_digital(DIGITAL_DOWN))
+  {
+    while(DegToIn(((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) < 5 && master.get_digital(DIGITAL_DOWN))
+      for(auto &m : driveTrain) {m.move_velocity(25);}
+
+      while(DegToIn(((leftEncoder.get_position() / 100) + (rightEncoder.get_position() / 100)) / 2) > 0 && master.get_digital(DIGITAL_DOWN))
+        for(auto &m : driveTrain) {m.move_velocity(-25);}
+  }
+  intake.move_velocity(0);
+}
+
+//Move the lift based on an enumerated value (down, platform, up)
 void Lift(liftState state)
 {
   if(state == up)
@@ -257,7 +291,7 @@ void Lift(liftState state)
 }
 
 
-
+//Start of auton selector
 void OnLeftButton()
 {
 	//If left button has been clicked before...
@@ -356,7 +390,7 @@ void OnRightButton()
 
 
 
-
+//Rate limiter for Pure Pursuit algorithm
 double RateLimiter(double input, int lastCall, double maxRateChange, double prevOutput)
 {
   int timeSinceLastCall = pros::millis()/1000 - lastCall/1000;

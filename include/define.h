@@ -35,7 +35,6 @@ extern pros::Motor driveTrain[6];
 extern std::array<pros::Motor, 3> driveTrainL;
 extern std::array<pros::Motor, 3> driveTrainR;
 
-extern pros::Rotation encoders[2];
 
 
 typedef void(*FnPtr) ();
@@ -44,6 +43,7 @@ extern FnPtr autonPointers[];
 extern int autonSelect;
 
 enum liftState { up, down, low };
+enum turnDirection { left, right };
 
 extern double wheelConversionFactor;
 
