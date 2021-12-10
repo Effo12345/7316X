@@ -30,36 +30,42 @@ void RightGrab()
 void LeftGrab()
 {
   frontClip.set_value(false);
+	DriveTrainPID(49);
+	pros::delay(100);
+	frontClip.set_value(true);
+	DriveTrainPID(8);
 
-  DriveTrainPID(1400);
-  frontClip.set_value(true);
+	FineTurn(-52);
+	WallPush(250);
 
-  DriveTrainPID(200);
-
-  CoarseTurn(-90);
+	RingIntake(7);
+	pros::delay(500);
+	DriveTrainPID(10);
 }
 
 void RightFull()
 {
   frontClip.set_value(false);
-  lift.move_velocity(-50);
+	lift.move_velocity(-50);
 
-  ArcMove(1350, 0.28, left);
+	ArcMove(1375, 0.28, left);
 
-  FineTurn(-58);
+	FineTurn(-58);
 
-  DriveTrainPID(25); //19 original
+	DriveTrainPID(24.5); //19 original
 
-  frontClip.set_value(true);
-  pros::delay(100);
-  lift.move_velocity(0);
+	frontClip.set_value(true);
+	pros::delay(100);
+	lift.move_velocity(0);
 
-  DriveTrainPID(-26);
+	DriveTrainPID(-20);
 
-  WallPush(1000);
+	WallPush(1400);
 
-  RingIntake(7);
-  backClip.set_value(true);
+	RingIntake(7);
+	pros::delay(100);
+
+	DriveTrainPID(15);
 }
 
 void LeftFull()
@@ -71,7 +77,7 @@ void LeftFull()
 	DriveTrainPID(10);
 	CoarseTurn(135);
 
-	DriveTrainPID(65);
+	DriveTrainPID(64.5);
 	frontClip.set_value(true);
 	pros::delay(100);
 
@@ -114,9 +120,29 @@ void DoubleGrab()
   intake.move_velocity(0);
 }
 
-void FullGrab()
+void FullWinPoint()
 {
+  backClip.set_value(true);
+	pros::delay(700);
 
+	DriveTrainPID(15);
+	pros::delay(100);
+
+	FineTurn(-45, 150, 0.0);
+	pros::delay(100);
+	ArcMove(-1000, .492, left);
+
+	backClip.set_value(false);
+	pros::delay(100);
+
+
+	WallPush(1700);
+	backClip.set_value(true);
+	RingIntake(7);
+
+	DriveTrainPID(20);
+	backClip.set_value(false);
+	DriveTrainPID(45);
 }
 
 void Skills()

@@ -67,7 +67,7 @@ void competition_initialize() {}
  */
 void autonomous() {
 	//PurePursuitInit();
-	
+
 	//Execute the autonomous program previously set by the auton selector
 	autonPointers[autonSelect]();
 }

@@ -8,7 +8,7 @@ extern void LeftGrab();
 extern void RightFull();
 extern void LeftFull();
 extern void DoubleGrab();
-extern void FullGrab();
+extern void FullWinPoint();
 extern void Skills();
 extern void None();
 

@@ -42,8 +42,8 @@ std::array<pros::Motor, 3> driveTrainR = {driveFR, driveMR, driveBR};
 
 //Auton selector
 typedef void(*FnPtr) ();
-void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint}, (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull}, (*fullR) (){&LeftFull}, (*dGrab) (){&DoubleGrab}, (*fGrabL) (){&FullGrab}, (*none) (){None};
-FnPtr autonPointers[] {none, none, none, none, fullL, fGrabL, fullR, grabL, grabR, winPointL, dGrab, winPointR, dGrab};
+void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint}, (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull}, (*fullR) (){&RightFull}, (*dGrab) (){&DoubleGrab}, (*wP) (){&FullWinPoint}, (*none) (){None};
+FnPtr autonPointers[] {none, none, none, none, fullL, wP, fullR, grabL, grabR, winPointL, dGrab, winPointR, dGrab};
 int autonSelect = 0;
 
 //File I/O for data output

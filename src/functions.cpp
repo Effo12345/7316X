@@ -70,6 +70,9 @@ void WallPush(int time)
   for(auto &m : driveTrain) {m.move_voltage(-12000);}
   pros::delay(time);
   for(auto &m : driveTrain) {m.move_voltage(0);}
+
+  leftEncoder.reset_position();
+  rightEncoder.reset_position();
 }
 
 
@@ -109,10 +112,10 @@ void CoarseTurn(int setpoint)
   rightEncoder.reset_position();
 }
 
-void FineTurn(int setpoint)
+void FineTurn(int setpoint, float kP = 170, float kI = 1.6)
 {
-  float kP = 170.0;
-  float kI = 1.0;
+  //float kP = 170.0;
+  //float kI = 1.5; //1.4
   float kD = 6.0;
 
   float error = 5;
@@ -195,7 +198,10 @@ void ArcMove(float setpoint, float reduction, turnDirection direction)
   //PID loop
   while(std::abs(error) > 5)
   {
-    error = setpoint - (rightEncoder.get_position() / 100);
+    if(direction == left)
+      error = setpoint - (rightEncoder.get_position() / 100);
+    else
+      error = setpoint - (leftEncoder.get_position() / 100);
     float integral = integral + error;
 
     if(error == 0)
@@ -304,9 +310,9 @@ void OnLeftButton()
   //If the center button has been clicked before...
   else if(autonSelect == 2)
   {
-    //... then run left Double Grab auton
+    //... then run full win point auton
     autonSelect = 5;
-    pros::lcd::set_text(3, "Full Grab L");
+    pros::lcd::set_text(3, "Full Win Point");
   }
 	//If right button was clicked before this...
   else if(autonSelect == 3)
