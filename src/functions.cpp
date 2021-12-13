@@ -112,7 +112,7 @@ void CoarseTurn(int setpoint)
   rightEncoder.reset_position();
 }
 
-void FineTurn(int setpoint, float kP = 170, float kI = 1.6)
+void FineTurn(int setpoint, float kP = 170, float kI = 1.7)
 {
   //float kP = 170.0;
   //float kI = 1.5; //1.4

@@ -4,10 +4,12 @@ void RightWinPoint()
 {
   DriveTrainPID(35);
 
-	FineTurn(-45);
+	FineTurn(-50, 140, 1);
 
 	WallPush(1000);
 	RingIntake(7);
+
+	DriveTrainPID(15);
 }
 
 void LeftWinPoint()
@@ -30,17 +32,17 @@ void RightGrab()
 void LeftGrab()
 {
   frontClip.set_value(false);
-	DriveTrainPID(49);
-	pros::delay(100);
-	frontClip.set_value(true);
-	DriveTrainPID(8);
+  DriveTrainPID(49);
+  pros::delay(100);
+  frontClip.set_value(true);
+  DriveTrainPID(8);
 
-	FineTurn(-52);
-	WallPush(250);
+  FineTurn(-52);
+  WallPush(250);
 
-	RingIntake(7);
-	pros::delay(500);
-	DriveTrainPID(10);
+  RingIntake(7);
+  pros::delay(500);
+  DriveTrainPID(10);
 }
 
 void RightFull()
@@ -52,7 +54,7 @@ void RightFull()
 
 	FineTurn(-58);
 
-	DriveTrainPID(24.5); //19 original
+	DriveTrainPID(25); //19 original
 
 	frontClip.set_value(true);
 	pros::delay(100);
