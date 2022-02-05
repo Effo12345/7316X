@@ -1,12 +1,11 @@
-#include "functions.h"
-#include "purepursuit.h"
+#include "main.h"
+#include "functions.hpp"
 
-//Declarations of variables used in driver control
+
 int stickMultiplier = 1;
 bool intakeToggle = false;
 bool frontClipToggle = true;
 bool backClipToggle = false;
-
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -14,26 +13,21 @@ bool backClipToggle = false;
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+
 void initialize() {
-	//Initialize the brain display and register buttons for auton selector
-	pros::lcd::initialize();
+	//Initialize PROS LCD
+	initSelector();
 
-	pros::lcd::register_btn0_cb(OnLeftButton);
-	pros::lcd::register_btn1_cb(OnCenterButton);
-	pros::lcd::register_btn2_cb(OnRightButton);
-
-	//Set the braking mode for the mobile goal lift so it holds its position when no button is being pressed
+	//Set lift to hold so the mobile goal doesn't drop after the button is let go
 	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 
-	//Calibrate and tare all sensors to ensure accurate data during autonomous
-	leftEncoder.reset_position();
+	//Calibrates and initializes sensors
 	rightEncoder.set_reversed(true);
-	rightEncoder.reset_position();
-	backEncoder.reset();
+	ResetSensors(true);
 
-	imu.reset();
-
+	//Initialize pneumatics
 	frontClip.set_value(true);
+	frontClip.set_value(false);
 }
 
 /**
@@ -66,10 +60,8 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	//PurePursuitInit();
-
 	//Execute the autonomous program previously set by the auton selector
-	autonPointers[autonSelect]();
+	getSelection()();
 }
 
 /**
@@ -86,25 +78,9 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	//Create lift task
-	/*
-	bigLiftTask = pros::c::task_create(BigLiftPID, (void*)1330, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Big lift");
-	pros::c::task_suspend(bigLiftTask);
-
-	fclose(targetVelocityL);
-	fclose(targetVelocityR);
-	fclose(measuredVelocityL);
-	fclose(measuredVelocityR);
-
-	bigLift1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	bigLift2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	*/
-
-	while (true) {
+	while(true) {
 		//Updates the on-screen buttons
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
+		updateSelector();
 
 		//Button to invert sticks
 		if(master.get_digital_new_press(DIGITAL_A))
@@ -122,10 +98,6 @@ void opcontrol() {
 		if(master.get_digital_new_press(DIGITAL_R2))
 			backClipToggle = !backClipToggle;
 
-		//Run a ring grabbing function for using driver loads
-		if(master.get_digital_new_press(DIGITAL_DOWN))
-			RingGrab();
-
 
 		//Get the values of the y-axes of the left and right sticks, and store them in left and right respectively
 		int left = master.get_analog(ANALOG_LEFT_Y) * stickMultiplier;
@@ -136,15 +108,9 @@ void opcontrol() {
 
 		//Set the power of the drivetrain motors based on the controller sticks
 		if(stickMultiplier + 1)
-		{
-			for(auto &m : driveTrainL) {m.move(left);}
-			for(auto &m : driveTrainR) {m.move(right);}
-		}
+			drive_op(left, right);
 		else
-		{
-			for(auto &m : driveTrainL) {m.move(right);}
-			for(auto &m : driveTrainR) {m.move(left);}
-		}
+			drive_op(right, left);
 
 		//Set the power of the mobile goal lifts motor based on the value calculated above
 		lift.move_velocity(liftValue * 200);
@@ -152,15 +118,10 @@ void opcontrol() {
 		//Set the power of the ringle intake based on value calculated above
 		intake.move_velocity(600 * intakeToggle);
 
-		//Sets the state of the pneumatic clip based on the value calculated above
+		//Sets the state of the pneumatic clips based on the values calculated above
 		frontClip.set_value(frontClipToggle);
 		backClip.set_value(backClipToggle);
 
-		//Telemtry commands that output data onto the brain screen
-		pros::lcd::set_text(1, std::to_string(leftEncoder.get_position() / 100));
-		pros::lcd::set_text(2, std::to_string(rightEncoder.get_position() / 100));
-		pros::lcd::set_text(3, std::to_string(backEncoder.get_value()));
-		pros::lcd::set_text(4, std::to_string(imu.get_rotation()));
 
 		pros::delay(20);
 	}

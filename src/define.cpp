@@ -1,62 +1,75 @@
 #include "main.h"
-#include "define.h"
-#include "autonomous.h"
-//Motor and controller declarations
-//Port 5 is broken
-pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::Motor driveFL(20, true);
-pros::Motor driveML(19);
-pros::Motor driveBL(16, true);
-pros::Motor driveFR(1);
-pros::Motor driveMR(8, true);
-pros::Motor driveBR(4);
-pros::Motor lift(6);
-pros::Motor intake(3, pros::E_MOTOR_GEARSET_06, true);
 
-//Pneumatics delcarations
-pros::ADIDigitalOut frontClip(2);
-pros::ADIDigitalOut backClip(1);
+//Externs are found in main.h
+
+using namespace pros; //Repeating pros:: is no longer required in declarations
+
+//Ports 5 and 8 are broken
+//TWP D is broken
+
+//Motor Ports
+#define DRIVE_FRONT_LEFT_PORT      1
+#define DRIVE_MIDDLE_LEFT_PORT     2
+#define DRIVE_BACK_LEFT_PORT       3
+#define DRIVE_FRONT_RIGHT_PORT     4
+#define DRIVE_MIDDLE_RIGHT_PORT    10
+#define DRIVE_BACK_RIGHT_PORT      6
+#define LIFT_PORT                  7
+#define INTAKE_PORT                13
+
+
+//Sensor Ports
+#define TRACKING_FIRST_PORT        5  //E
+#define TRACKING_SECOND_PORT       6  //F
+#define LEFT_ENCODER_PORT          11
+#define RIGHT_ENCODER_PORT         20
+#define IMU_SENSOR_PORT            12
+
+
+//Pneumatic Ports
+#define FRONT_CLIP_PORT            1  //A
+#define BACK_CLIP_PORT             2  //B
+
+
+
+//Motor name(port, gearset, bool reversed, encoder units)
+Motor driveFL(DRIVE_FRONT_LEFT_PORT, MOTOR_GEARSET_18,
+              true, E_MOTOR_ENCODER_DEGREES);
+Motor driveML(DRIVE_MIDDLE_LEFT_PORT, MOTOR_GEARSET_18,
+              false, E_MOTOR_ENCODER_DEGREES);
+Motor driveBL(DRIVE_BACK_LEFT_PORT, MOTOR_GEARSET_18,
+              true, E_MOTOR_ENCODER_DEGREES);
+Motor driveFR(DRIVE_FRONT_RIGHT_PORT, MOTOR_GEARSET_18,
+              false, E_MOTOR_ENCODER_DEGREES);
+Motor driveMR(DRIVE_MIDDLE_RIGHT_PORT, MOTOR_GEARSET_18,
+              true, E_MOTOR_ENCODER_DEGREES);
+Motor driveBR(DRIVE_BACK_RIGHT_PORT, MOTOR_GEARSET_18,
+              false, E_MOTOR_ENCODER_DEGREES);
+Motor lift(LIFT_PORT, MOTOR_GEARSET_18,
+              true, E_MOTOR_ENCODER_DEGREES);
+Motor intake(INTAKE_PORT, E_MOTOR_GEARSET_06,
+              false, E_MOTOR_ENCODER_DEGREES);
 
 //Sensor declarations
-pros::Rotation leftEncoder(2);
-pros::Rotation rightEncoder(18);
-pros::ADIEncoder backEncoder(3, 4, true);
+ADIEncoder tracking(TRACKING_FIRST_PORT, TRACKING_SECOND_PORT, false);
+Rotation leftEncoder(LEFT_ENCODER_PORT);
+Rotation rightEncoder(RIGHT_ENCODER_PORT);
+Imu gyro(IMU_SENSOR_PORT);
 
-pros::Imu imu(15);
+//Pneumatics declarations
+ADIDigitalOut frontClip(FRONT_CLIP_PORT);
+ADIDigitalOut backClip(BACK_CLIP_PORT);
 
-/*
-//Multithreading task declaration
-pros::task_t smallLiftTask;
-pros::task_t bigLiftTask;
-pros::task_t driveTrainTask;
-pros::task_t purePursuitTask;
-pros::task_t odometryTask;
-*/
+//Controller declaration
+Controller master(E_CONTROLLER_MASTER);
 
+//Misc functions
+void ResetSensors(bool calibrateGyro) {
+  tracking.reset();
+  leftEncoder.reset();
+  rightEncoder.reset();
+  if(calibrateGyro) {gyro.reset();  pros::delay(2000);}
+  else {gyro.tare_rotation();}
 
-//Declaration of drive train/sensor arrays for easier access
-pros::Motor driveTrain[6] {driveFL, driveBR, driveBL, driveFR, driveML, driveMR};
-std::array<pros::Motor, 3> driveTrainL = {driveFL, driveML, driveBL};
-std::array<pros::Motor, 3> driveTrainR = {driveFR, driveMR, driveBR};
-
-
-//Auton selector
-typedef void(*FnPtr) ();
-void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint}, (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull}, (*fullR) (){&RightFull}, (*dGrab) (){&DoubleGrab}, (*wP) (){&FullWinPoint}, (*none) (){None};
-FnPtr autonPointers[] {none, none, none, none, fullL, wP, fullR, grabL, grabR, winPointL, dGrab, winPointR, dGrab};
-int autonSelect = 0;
-
-//File I/O for data output
-FILE* targetVelocityL = fopen("/usd/telem/targetVelocityTelemL.txt", "w");
-FILE* targetVelocityR = fopen("/usd/telem/targetVelocityTelemR.txt", "w");
-FILE* measuredVelocityL = fopen("/usd/telem/measuredVelocityTelemL.txt", "w");
-FILE* measuredVelocityR = fopen("/usd/telem/measuredVelocityTelemR.txt", "w");
-
-//Convert between degrees per second and rotations per minute
-double DPStoRPM = 0.166666667;
-
-//Definition of struct "position" for use in odometry code
-sPos position;
-
-//Conversion factor from degrees of wheel rotation to inches
-double wheelConversionFactor = 28.648;
+  printf("Sensors reset\n");
+}

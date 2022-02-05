@@ -36,12 +36,73 @@
 
 #include "api.h"
 
+#define PI 3.14159265359
+
+//Class to hold any necessary timing values
+class timer {
+  int prevTime = pros::millis();
+public:
+  int time_abs;
+  int time_relative;
+  int time(){
+    time_abs = pros::millis();
+    time_relative = time_abs - prevTime;
+    return time_relative;
+  }
+  void reset() {
+    prevTime = pros::millis();
+  }
+};
+
+//Rate limiter used in pure pursuit algorithm
+class rateLimiter {
+  timer clock;        //Timer to get time since last call
+  double output;      //Output value (must persist between function calls)
+public:
+  double constrain(double input, double maxRateChange) {
+    double maxChange = clock.time() * maxRateChange;
+    double temp = input - output;
+
+    if(temp < -maxChange)
+      temp = -maxChange;
+    else if(temp > maxChange)
+      temp = maxChange;
+
+    clock.reset();
+    output += temp;
+    return output;
+  }
+};
+
+extern pros::Motor driveFL;
+extern pros::Motor driveML;
+extern pros::Motor driveBL;
+extern pros::Motor driveFR;
+extern pros::Motor driveMR;
+extern pros::Motor driveBR;
+extern pros::Motor lift;
+extern pros::Motor intake;
+
+
+extern pros::ADIEncoder tracking;
+extern pros::Rotation leftEncoder;
+extern pros::Rotation rightEncoder;
+extern pros::Imu gyro;
+
+extern pros::ADIDigitalOut frontClip;
+extern pros::ADIDigitalOut backClip;
+
+extern pros::Controller master;
+
+//Misc functions
+void ResetSensors(bool calibrateGyro);
+
+
 /**
  * You should add more #includes here
  */
 //#include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
-#define PI 3.14159265359
 
 /**
  * If you find doing pros::Motor() to be tedious and you'd prefer just to do
@@ -76,7 +137,7 @@ void opcontrol(void);
 /**
  * You can add C++-only headers here
  */
-//#include <iostream>
+#include <iostream>
 #endif
 
 #endif  // _PROS_MAIN_H_
