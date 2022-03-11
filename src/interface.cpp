@@ -6,12 +6,14 @@ struct selection {
   void (*pointer) (){};
 };
 
+//Empty function
+void None() {}
 
 //Declares function pointers to hold the call to auton functions
 void (*grabL) (){&LeftGrab}, (*grabR) (){&RightGrab}, (*winPointL) (){&LeftWinPoint},
                   (*winPointR) (){&RightWinPoint}, (*fullL) (){&LeftFull},
                   (*fullR) (){&RightFull}, (*dGrab) (){&DoubleGrab},
-                  (*wP) (){&FullWinPoint}, (*skills) (){&Skills};
+                  (*wP) (){&FullWinPoint}, (*skills) (){&Skills}, (*none) (){&None};
 
 //std::optional stores whether the variable has been initialized
 std::optional<int> yVal;
@@ -56,6 +58,9 @@ void selector(int val) {
 
 //Returns function pointer to be called in autonomous
 void (*getSelection()) () {
+  //Check if yVal is initialized to avoid a segmentation fault
+  if(!yVal)
+    return none;
   return autonToRun.pointer;
 }
 

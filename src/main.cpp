@@ -1,11 +1,14 @@
 #include "main.h"
 #include "functions.hpp"
+#include "statemachine.hpp"
 
 
 int stickMultiplier = 1;
 bool intakeToggle = false;
-bool frontClipToggle = true;
+bool frontClipToggle = false;
 bool backClipToggle = false;
+bool clipGuardToggle = false;
+bool autoIntake = false;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -24,10 +27,6 @@ void initialize() {
 	//Calibrates and initializes sensors
 	rightEncoder.set_reversed(true);
 	ResetSensors(true);
-
-	//Initialize pneumatics
-	frontClip.set_value(true);
-	frontClip.set_value(false);
 }
 
 /**
@@ -59,7 +58,7 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {
+void autonomous() {	
 	//Execute the autonomous program previously set by the auton selector
 	getSelection()();
 }
@@ -78,6 +77,11 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	//Clip holds between auton and driver
+	frontClipToggle = stateMachine.getGoalState();
+	clipGuardToggle = stateMachine.getGuardState();
+
+
 	while(true) {
 		//Updates the on-screen buttons
 		updateSelector();
@@ -98,6 +102,14 @@ void opcontrol() {
 		if(master.get_digital_new_press(DIGITAL_R2))
 			backClipToggle = !backClipToggle;
 
+		//Button to toggle the clip guard
+		if(master.get_digital_new_press(DIGITAL_Y))
+			clipGuardToggle = !clipGuardToggle;
+
+		//Toggle auto intake for skills
+		if(master.get_digital_new_press(DIGITAL_DOWN))
+			autoIntake = !autoIntake;
+
 
 		//Get the values of the y-axes of the left and right sticks, and store them in left and right respectively
 		int left = master.get_analog(ANALOG_LEFT_Y) * stickMultiplier;
@@ -113,14 +125,18 @@ void opcontrol() {
 			drive_op(right, left);
 
 		//Set the power of the mobile goal lifts motor based on the value calculated above
-		lift.move_velocity(liftValue * 200);
+		lift.move_velocity(liftValue * 100);
 
 		//Set the power of the ringle intake based on value calculated above
 		intake.move_velocity(600 * intakeToggle);
 
-		//Sets the state of the pneumatic clips based on the values calculated above
+		//Sets the state of the pneumatic clips and guard based on the values calculated above
 		frontClip.set_value(frontClipToggle);
 		backClip.set_value(backClipToggle);
+		clipGuard.set_value(clipGuardToggle);
+
+		//Run the auto intake based on toggle
+		auto_intake(autoIntake);
 
 
 		pros::delay(20);
