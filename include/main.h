@@ -91,11 +91,15 @@ extern pros::Imu gyro;
 
 extern pros::ADIDigitalOut frontClip;
 extern pros::ADIDigitalOut backClip;
+extern pros::ADIDigitalOut clipGuard;
 
 extern pros::Controller master;
 
 //Misc functions
 void ResetSensors(bool calibrateGyro);
+
+//Enumerated values to increase the readability of various functions
+enum intakeState {off, on};
 
 
 /**
@@ -138,6 +142,8 @@ void opcontrol(void);
  * You can add C++-only headers here
  */
 #include <iostream>
+#include <array>
+#include <optional>
 #endif
 
 #endif  // _PROS_MAIN_H_

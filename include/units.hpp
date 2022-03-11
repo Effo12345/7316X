@@ -1,5 +1,8 @@
 #include "main.h"
 
+#ifndef UNITS_HPP
+#define UNITS_HPP
+
 //Class to hold all unit conversion functions for ease of access
 class Units{
 private:
@@ -38,4 +41,6 @@ public:
   }
 };
 
-Units Units;
+static Units Units;
+
+#endif //UNITS_HPP

@@ -5,19 +5,26 @@
 
 //Externs for functions from other cpp files
 //drive.cpp
-void start_odom();
-void quit_odom();
-void start_pp(std::vector<std::vector<double>> waypoints, int lookaheadDistance);
-void start_pp_async(std::vector<std::vector<double>> waypoints, int lookaheadDistance);
-void quit_pp();
 void drive_voltage(int left, int right);
 void drive_op(int left, int right);
-void speedPID(double setpoint);
+void drive_velocity(int left, int right);
+void hyperGrab(double setpoint);
+void translatePID(double setpoint);
+void turnPID(int setpoint, float kP, float kI, int time);
+void goalGrab(int time);
+void PIDTurn(double setpoint);
+
+//intake.cpp
+void intake_rot(int rotations);
+void ringIntake(intakeState state);
+void ringMove(int time);
+void auto_intake(bool autoIntake);
 
 //interface.cpp
 void initSelector();
 void updateSelector();
 void (*getSelection()) ();
+void None();
 
 //autonomous.cpp
 void LeftGrab();
