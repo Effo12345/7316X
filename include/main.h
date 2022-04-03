@@ -57,16 +57,13 @@ public:
 //Rate limiter used in pure pursuit algorithm
 class rateLimiter {
   timer clock;        //Timer to get time since last call
-  double output;      //Output value (must persist between function calls)
+  float output;      //Output value (must persist between function calls)
 public:
-  double constrain(double input, double maxRateChange) {
-    double maxChange = clock.time() * maxRateChange;
-    double temp = input - output;
+  float constrain(float input, float maxRateChange) {
+    float maxChange = clock.time() * maxRateChange;
+    float temp = input - output;
 
-    if(temp < -maxChange)
-      temp = -maxChange;
-    else if(temp > maxChange)
-      temp = maxChange;
+    temp = (temp < -maxChange)? : (temp > maxChange)? : temp;
 
     clock.reset();
     output += temp;

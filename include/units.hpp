@@ -6,7 +6,7 @@
 //Class to hold all unit conversion functions for ease of access
 class Units{
 private:
-  const double trackingCircumference = 2.75 * PI; //Circumference of tracking wheel
+  const double trackingCircumference = 2.798 * PI; //Circumference of tracking wheel
   const double wheelConversionFactor = 360 / trackingCircumference;
 public:
   double in_to_m(double in) {

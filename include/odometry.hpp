@@ -92,8 +92,12 @@ void TrackPosition() {
       pros::lcd::set_text(2, output2);
       pros::lcd::set_text(3, output3);
     }
-    pros::delay(20);
+    pros::delay(10);
   }
+}
+
+void start_odom() {
+  pros::Task odom_task(TrackPosition, "Odometry");
 }
 
 class pather {
@@ -115,7 +119,7 @@ public:
     float gearRatio = 0.714285714;//Gear ratio of drivetrain to scale output power
     //Tuning constants
     const float kV = 1.0;              //Feedforward velocity constant
-    const float kA = 0.56;             //Feedforward acceleration constant
+    const float kA = 0.0;//0.56;             //Feedforward acceleration constant
     const float kP = 2.8;              //Proportional feedback constant
 
     float lookaheadDistance = 25;//Distance the robot looks ahead to follow
@@ -438,8 +442,8 @@ void parse_path() {
 
       //Rate limiter call
       //TODO: Fix rate limiter
-      //float targetVelocity = limit.constrain(curvedPath[closestPoint][2], maxRateChange);
-      float targetVelocity = curvedPath[closestPoint][2];
+      float targetVelocity = limit.constrain(curvedPath[closestPoint][2], maxRateChange);
+      //float targetVelocity = curvedPath[closestPoint][2];
 
 
       //Target left wheel speed
@@ -454,8 +458,8 @@ void parse_path() {
       }
 
       //Control wheel velocities
-      float lFF = (kV * L); //Add kA term (potentially divide by dT for change in time if it is not constant)
-      float rFF = (kV * R); //Add kA term
+      float lFF = (kV * L) + (kA * ((L - prevL) / (clock.time()))); 
+      float rFF = (kV * R) + (kA * ((R - prevR) / (clock.time()))); 
       prevL = L;
       prevR = R;
       clock.reset();

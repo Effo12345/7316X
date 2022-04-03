@@ -32,7 +32,7 @@ void ringMove(int time) {
 
 void auto_intake(bool autoIntake) {
   if(autoIntake) {
-    if(lift.get_position() > 57)
+    if(lift.get_position() > 146)
       intake.move_velocity(600);
     else
       intake.move_velocity(0);

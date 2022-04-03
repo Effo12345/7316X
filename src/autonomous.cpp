@@ -27,7 +27,7 @@ void RightGrab() {
   	clipGuard.set_value(true);
 	hyperGrab(40);
 	frontClip.set_value(true);
-	translatePID(20);
+	translatePID(10);
 }
 
 //Primary autons
@@ -182,7 +182,7 @@ void Skills() {
 	pather path2({
 		{56.0, -2.0},
 		{99.0, -30.0}
-	}, 20, false);
+	}, 20, 150, false, 3000);
 
 	lift.move_velocity(-100);
 	pros::delay(850);
@@ -205,7 +205,7 @@ void Skills() {
 	drive_velocity(0, 0);
 	pros::delay(100);
 
-	PIDTurn(gyro.get_rotation() + 175);
+	PIDTurn(gyro.get_rotation() + 170);
 	pros::delay(500);
 
 	drive_velocity(100, 100);
@@ -247,7 +247,7 @@ void Skills() {
 	pros::delay(1500);
 	lift.move_velocity(0);
 
-	PIDTurn(4);
+	PIDTurn(2);
 	pros::delay(500);
 
 	drive_velocity(50, 50);
@@ -287,13 +287,13 @@ void Skills() {
 
 	pather path4({
 		{61, -154},
-		{81.5, -154},
-		{81.5, -123}
+		{84, -154},
+		{84, -123}
 	}, 10, false);
 
 	pather path5({
-		{81.5, -120},
-		{81.5, -150}
+		{84, -120},
+		{84, -150}
 	}, 10, 150, true, 2000);
 	pros::delay(250);
 
@@ -309,18 +309,18 @@ void Skills() {
 	pather path6({
 		{82, -152},
 		{82, -100}
-	}, 15, false);
+	}, 15, 150, false, 3000);
 	pros::delay(1000);
 
-	drive_velocity(-100, 100);
-	pros::delay(500);
-	drive_velocity(0, 0);
+	//drive_velocity(-100, 100);
+	//pros::delay(500);
+	//drive_velocity(0, 0);
 	//PIDTurn(-90);
-	pros::delay(300);
+	//pros::delay(300);
 	lift.move_velocity(-100);
-	drive_velocity(50, 50);
+	//drive_velocity(50, 50);
 	pros::delay(100);
-	drive_velocity(0, 0);
+	//drive_velocity(0, 0);
 	pros::delay(500);
 	lift.move_velocity(0);
 	frontClip.set_value(false);
@@ -329,10 +329,10 @@ void Skills() {
 	pros::delay(300);
 	lift.move_velocity(0);
 	
-	PIDTurn(0);
+	//PIDTurn(0);
 
 	pros::delay(100);
-	lift.move_velocity(-100);
+	//lift.move_velocity(-100);
 
 	pather path7({
 		{82, -44},
@@ -342,16 +342,26 @@ void Skills() {
 
 	gyro.tare();
 	turnPID(89, 0.25, 0.001, 1000);
+
+	lift.move_velocity(-100);
+	pros::delay(1500);
 	
 
 	pather path8({
 		{123, -80},
-		{148, -80}
+		{144, -80}
 	}, 10, false);
 	pros::delay(500);
 	frontClip.set_value(true);
 	pros::delay(100);
 
+	//turnPID(130, 0.25, 0.001, 1000);
+
+	drive_voltage(6000, 6000);
+	pros::delay(3000);
+	drive_voltage(0, 0);
+
+/*
 	lift.move_velocity(100);
 	pros::delay(2000);
 	lift.move_velocity(0);
@@ -373,5 +383,17 @@ void Skills() {
 	drive_velocity(-25, -25);
 	pros::delay(250);
 	drive_velocity(0, 0);
+	*/
 	
+}
+
+void tmp() {
+	start_odom();
+
+	
+	pather test({
+		{0, 0},
+		{-13.04, 32.74},
+		{-46.77, 47.48},
+	}, 20, false);
 }

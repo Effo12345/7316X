@@ -11,16 +11,16 @@ using namespace pros; //Repeating pros:: is no longer required in declarations
 #define DRIVE_FRONT_RIGHT_PORT     4
 #define DRIVE_MIDDLE_RIGHT_PORT    5
 #define DRIVE_BACK_RIGHT_PORT      6
-#define LIFT_PORT                  7
+#define LIFT_PORT                  9
 #define INTAKE_PORT                8
 
 
 //Sensor Ports
 #define TRACKING_FIRST_PORT        5  //E
 #define TRACKING_SECOND_PORT       6  //F
-#define LEFT_ENCODER_PORT          11
-#define RIGHT_ENCODER_PORT         20
-#define IMU_SENSOR_PORT            12
+#define LEFT_ENCODER_PORT          10
+#define RIGHT_ENCODER_PORT         12
+#define IMU_SENSOR_PORT            11
 
 
 //Pneumatic Ports
@@ -44,7 +44,7 @@ Motor driveMR(DRIVE_MIDDLE_RIGHT_PORT, MOTOR_GEARSET_18,
 Motor driveBR(DRIVE_BACK_RIGHT_PORT, MOTOR_GEARSET_18,
               false, E_MOTOR_ENCODER_DEGREES);
 Motor lift(LIFT_PORT, MOTOR_GEARSET_36,
-              true, E_MOTOR_ENCODER_DEGREES);
+              false, E_MOTOR_ENCODER_DEGREES);
 Motor intake(INTAKE_PORT, E_MOTOR_GEARSET_06,
               false, E_MOTOR_ENCODER_DEGREES);
 

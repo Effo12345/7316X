@@ -4,7 +4,7 @@
 
 
 int stickMultiplier = 1;
-bool intakeToggle = false;
+int intakeToggle = false;
 bool frontClipToggle = false;
 bool backClipToggle = false;
 bool clipGuardToggle = false;
@@ -59,8 +59,11 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {	
+	tmp();
+
+
 	//Execute the autonomous program previously set by the auton selector
-	getSelection()();
+	//getSelection()();
 }
 
 /**
@@ -93,6 +96,10 @@ void opcontrol() {
 		//Button to toggle ringle intake
 		if(master.get_digital_new_press(DIGITAL_B))
 			intakeToggle = !intakeToggle;
+
+		//Button for inverting the ringle intake
+		if(master.get_digital_new_press(DIGITAL_UP))
+			intakeToggle *= -1;
 
 		//Button to toggle the front pneumatic clip
 		if(master.get_digital_new_press(DIGITAL_R1))

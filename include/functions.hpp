@@ -36,6 +36,6 @@ void RightWinPoint();
 void FullWinPoint();
 void DoubleGrab();
 void Skills();
-
+void tmp();
 
 #endif //FUNCTIONS_HPP
