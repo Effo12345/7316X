@@ -19,7 +19,8 @@ bool autoIntake = false;
 
 void initialize() {
 	//Initialize PROS LCD
-	initSelector();
+	InterfaceInit();
+	//pros::lcd::initialize();
 
 	//Set lift to hold so the mobile goal doesn't drop after the button is let go
 	lift.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -84,11 +85,9 @@ void opcontrol() {
 	frontClipToggle = stateMachine.getGoalState();
 	clipGuardToggle = stateMachine.getGuardState();
 
+	forceQuit_t = false;
 
 	while(true) {
-		//Updates the on-screen buttons
-		updateSelector();
-
 		//Button to invert sticks
 		if(master.get_digital_new_press(DIGITAL_A))
 			stickMultiplier *= -1;
@@ -144,6 +143,9 @@ void opcontrol() {
 
 		//Run the auto intake based on toggle
 		auto_intake(autoIntake);
+
+		pros::lcd::set_text(2, std::to_string(gyro.get_rotation()));
+		pros::lcd::set_text(3, std::to_string(tracking.get_value()));
 
 
 		pros::delay(20);

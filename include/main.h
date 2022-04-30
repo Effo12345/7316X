@@ -57,13 +57,13 @@ public:
 //Rate limiter used in pure pursuit algorithm
 class rateLimiter {
   timer clock;        //Timer to get time since last call
-  float output;      //Output value (must persist between function calls)
+  float output = 0.0;      //Output value (must persist between function calls)
 public:
   float constrain(float input, float maxRateChange) {
-    float maxChange = clock.time() * maxRateChange;
+    float maxChange = (0.025) * maxRateChange;
     float temp = input - output;
 
-    temp = (temp < -maxChange)? : (temp > maxChange)? : temp;
+    temp = (temp < -maxChange) ? -maxChange : (temp > maxChange) ? maxChange : temp;
 
     clock.reset();
     output += temp;
@@ -85,6 +85,7 @@ extern pros::ADIEncoder tracking;
 extern pros::Rotation leftEncoder;
 extern pros::Rotation rightEncoder;
 extern pros::Imu gyro;
+extern pros::GPS gps;
 
 extern pros::ADIDigitalOut frontClip;
 extern pros::ADIDigitalOut backClip;
@@ -94,6 +95,7 @@ extern pros::Controller master;
 
 //Misc functions
 void ResetSensors(bool calibrateGyro);
+extern float rot_offset;
 
 //Enumerated values to increase the readability of various functions
 enum intakeState {off, on};

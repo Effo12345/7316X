@@ -14,7 +14,11 @@ public:
   }
 
   double m_to_in(double m) {
-    return m * 39.27;
+    return m * 39.37;
+  }
+
+  double mm_to_in(double m) {
+    return m * 0.0393701;
   }
 
   //Used to convert between degrees of rotation and inches of movement

@@ -47,8 +47,10 @@ void drive_op(int left, int right) {
 //Optimized to be as fast as possible
 void hyperGrab(double setpoint)
 {
+  timer clock; 
+
   drive_voltage(12000, 12000);
-  while((setpoint - Units.DegToIn(tracking.get_value())) > 5)
+  while((setpoint - Units.DegToIn(tracking.get_value())) > 5 && clock.time() < 2000)
     pros::delay(25);
 
 
@@ -62,7 +64,7 @@ void hyperGrab(double setpoint)
 
   setpoint = Units.InToDeg(setpoint);
 
-  while(error > 5 /*true std::abs(error) > 5*/)
+  while(error > 5 /*true std::abs(error) > 5*/ && clock.time() < 2000)
   {
     error = setpoint - tracking.get_value();
     float integral = integral + error;
@@ -182,13 +184,13 @@ void turnPID(int setpoint, float kP, float kI, int time)
     pros::delay(15);
   }
   drive_voltage(0, 0);
-  tracking.reset();
+  //tracking.reset();
 }
 
 
 //Experimental turn PID
 void PIDTurn(double setpoint) {
-  float kP = 0.243;
+  float kP = 0.24;
   float kI = 0.001;
   float kD = 0.6;
 
@@ -200,14 +202,10 @@ void PIDTurn(double setpoint) {
 
   timer clock;
 
-  while(std::fabs(error) > 1.0 && clock.time() < 1000) {
+  while(std::fabs(error) > 1.0 && clock.time() < 500) {
     float adj_heading = gyro.get_rotation();
-    if(adj_heading < setpoint - 180)
-      adj_heading += 360;
-    else if(adj_heading > setpoint + 180)
-      adj_heading -= 360;
 
-    error = setpoint - (adj_heading * 1000);
+    error = setpoint - (adj_heading * 1000); 
 
     if(std::fabs(error) < Ki_active_t)
       integral = integral + error;
@@ -224,7 +222,7 @@ void PIDTurn(double setpoint) {
     prevError = error;
 
     std::string aOut = "A: " + std::to_string(adj_heading);
-    std::string errorOut = "Error: " + std::to_string(error);
+    std::string errorOut = "Error: " + std::to_string(error/1000);
     std::string powerOut = "Power: " + std::to_string(power);
     pros::lcd::set_text(4, aOut);
     pros::lcd::set_text(5, errorOut);
@@ -235,7 +233,7 @@ void PIDTurn(double setpoint) {
     pros::delay(20);
   }
   drive_voltage(0, 0);
-  tracking.reset();
+  //tracking.reset();
 }
 
 

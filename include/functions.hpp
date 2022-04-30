@@ -21,8 +21,7 @@ void ringMove(int time);
 void auto_intake(bool autoIntake);
 
 //interface.cpp
-void initSelector();
-void updateSelector();
+void InterfaceInit();
 void (*getSelection()) ();
 void None();
 
@@ -33,6 +32,7 @@ void LeftFull();
 void RightFull();
 void LeftWinPoint();
 void RightWinPoint();
+void RightTall();
 void FullWinPoint();
 void DoubleGrab();
 void Skills();

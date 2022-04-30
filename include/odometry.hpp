@@ -34,6 +34,7 @@ float chordLength;           //Length of a 2d vector
 float pos[2] {0, 0};         //Position of the robot {x, y}
 
 bool forceQuit;
+//float rot_offset = 0.0;
 
 
  /*
@@ -59,7 +60,7 @@ void TrackPosition() {
     //Set the previous distance to the current distance
     prevD = distance;
     //Find the change in heading
-    heading = gyro.get_rotation();
+    heading = gyro.get_rotation() + rot_offset;
     deltaH = heading - prevH;
     prevH = heading;
 
@@ -100,6 +101,19 @@ void start_odom() {
   pros::Task odom_task(TrackPosition, "Odometry");
 }
 
+void calibrate_odom() {
+  pos[0] = Units.m_to_in(gps.get_status().x);
+  pos[1] = Units.m_to_in(gps.get_status().y);
+  rot_offset = gps.get_status().yaw - 90;
+}
+
+void set_odom(float x, float y, float a) {
+  pos[0] = x;
+  pos[1] = y;
+  rot_offset = a;
+  //gyro.set_rotation(a);
+}
+
 class pather {
 public:
     std::vector<std::vector<float>> w;
@@ -110,23 +124,24 @@ public:
     float weight_data = 1 - weight_smooth;       //Variables for adjusting curvature
     float tolerance = 0.001;                        //of path (gradient descent)
     float maxVelocity = 280;     //Maximum velocity the robot will follow the path with
-    float k = 3.0;               //Tuning constant of how fast the robot will move
+    float k = 5.0;               //Tuning constant of how fast the robot will move
                                    //around curves
-    float maxAcceleration = 150; //Maximum difference of target velocity
+    float maxAcceleration = 100; //Maximum difference of target velocity
                                    //between each point
-    float maxRateChange = 10;    //Define the maximum amount the rate limiter will
+    float maxRateChange = 200;    //Define the maximum amount the rate limiter will
                                    //change the input per update
     float gearRatio = 0.714285714;//Gear ratio of drivetrain to scale output power
     //Tuning constants
-    const float kV = 1.0;              //Feedforward velocity constant
-    const float kA = 0.0;//0.56;             //Feedforward acceleration constant
-    const float kP = 2.8;              //Proportional feedback constant
+    const float kV = 2.4;              //Feedforward velocity constant
+    const float kA = 0.0;//0.2;             //Feedforward acceleration constant
+    const float kP = 2.0;              //Proportional feedback constant
 
     float lookaheadDistance = 25;//Distance the robot looks ahead to follow
     bool reversed = false;
 
     int time = 100000;
-
+    bool useRateLimter = true;
+    
 
 /*
  * @brief Convert waypoints into finished path
@@ -293,14 +308,21 @@ void parse_path() {
     //Telemtry variables
     int iteratorTelem = 0;
     timer timeSinceStart;
+    //FILE* targetVelocity_t = fopen("/usd/telem/targetVelocity.txt", "w");
+    //FILE* measuredVelocity_t = fopen("/usd/telem/measuredVelocity.txt", "w");
+    //FILE* time_out = fopen("/usd/telem/time.txt", "w");
+
+    float startPos[2] {pos[0], pos[1]};
+
 
     //while loop starts here
-    while(closestPoint != curvedPath.size() - 1 && timeSinceStart.time() < time) {
+    while(!stateMachine.isSettled() || sqrt(pow(pos[0] - startPos[0], 2) + pow(pos[1] - startPos[1], 2)) < 3
+                                /*closestPoint != curvedPath.size() - 1 && timeSinceStart.time() < time*/) {
       //Copy position for thread protection
       threadProtector_t.take();
       position.x = pos[0];
       position.y = pos[1];
-      position.a = Units.DegToRad(gyro.get_rotation());
+      position.a = Units.DegToRad(gyro.get_rotation() + rot_offset);
       threadProtector_t.give();
 
       //If reverse pathing is desired,
@@ -322,7 +344,6 @@ void parse_path() {
           closestPoint = i;
         }
       }
-
 
       
       //=================================================================================
@@ -442,8 +463,11 @@ void parse_path() {
 
       //Rate limiter call
       //TODO: Fix rate limiter
-      float targetVelocity = limit.constrain(curvedPath[closestPoint][2], maxRateChange);
-      //float targetVelocity = curvedPath[closestPoint][2];
+      float targetVelocity;
+      if(useRateLimter)
+        targetVelocity = limit.constrain(curvedPath[closestPoint][2], maxRateChange);
+      else
+        targetVelocity = curvedPath[closestPoint][2];
 
 
       //Target left wheel speed
@@ -458,8 +482,8 @@ void parse_path() {
       }
 
       //Control wheel velocities
-      float lFF = (kV * L) + (kA * ((L - prevL) / (clock.time()))); 
-      float rFF = (kV * R) + (kA * ((R - prevR) / (clock.time()))); 
+      float lFF = (kV * L) + (kA * ((L - prevL) / 0.025)); 
+      float rFF = (kV * R) + (kA * ((R - prevR) / 0.025)); 
       prevL = L;
       prevR = R;
       clock.reset();
@@ -484,10 +508,38 @@ void parse_path() {
       std::string curvatureOutput = "Curvature: " + std::to_string(curvature);
       pros::lcd::set_text(7, curvatureOutput);
 
+      /*
+      if(iteratorTelem % 1 == 0)
+      {
+        //Left target velocity
+        std::string output = std::to_string(L);
+        char outputArray[output.size() + 1];
+        strcpy(outputArray, output.c_str());
+    	  fprintf(targetVelocity_t, "%s\n", outputArray);
+
+        //Left measured velocity
+        std::string output2 = std::to_string(Units.DPSToRPM(leftEncoder.get_velocity() / 100));
+        char outputArray2[output2.size() + 1];
+        strcpy(outputArray2, output2.c_str());
+    	  fprintf(measuredVelocity_t, "%s\n", outputArray2);
+
+        //Time
+        std::string output3 = std::to_string(timeSinceStart.time());
+        char outputArray3[output3.size() + 1];
+        strcpy(outputArray3, output3.c_str());
+        fprintf(time_out, "%s\n", outputArray3);
+      }
+
+      iteratorTelem++;
+      */
+
       pros::delay(25);
     }
     printf("Quit PP \n");
     drive_voltage(0, 0);
+    //fclose(targetVelocity_t);
+    //fclose(measuredVelocity_t);
+    //fclose(time_out);
   }
 
 
@@ -515,6 +567,37 @@ void parse_path() {
         
         follow_path();
     }    
+
+    pather(std::vector<std::vector<float>> w_t, float lookAhead, int maxAccel, float k_t, bool reversed_t, int time_t) {
+        w = w_t;
+        lookaheadDistance = lookAhead;
+        reversed = reversed_t;
+        maxAcceleration = maxAccel;
+        time = time_t;
+        k = k_t;
+
+
+        parse_path();
+
+        
+        follow_path();
+    }    
+
+    pather(std::vector<std::vector<float>> w_t, float lookAhead, int maxAccel, float k_t, bool reversed_t, bool useRateLimter_t, int time_t) {
+        w = w_t;
+        lookaheadDistance = lookAhead;
+        reversed = reversed_t;
+        maxAcceleration = maxAccel;
+        time = time_t;
+        k = k_t;
+        useRateLimter = useRateLimter_t;
+
+
+        parse_path();
+
+        
+        follow_path();
+    }   
 };
 
 
@@ -528,10 +611,10 @@ void parse_path() {
  */
 void turnTo(float x, float y, bool reversed) {
   //Find the target delta heading
-  float headingRad = Units.DegToRad(gyro.get_rotation());
+  float headingRad = Units.DegToRad(gyro.get_yaw() + rot_offset);
   vector_t headingVector;
-  headingVector.x = sin(headingRad);
-  headingVector.y = cos(headingRad);
+  headingVector.x = cos(headingRad);
+  headingVector.y = sin(headingRad);
 
   vector_t targetVector;
   targetVector.x = x - pos[0];
@@ -543,16 +626,18 @@ void turnTo(float x, float y, bool reversed) {
                           / targetVector.magnitude));
 
   //Find whether the turn is to the left or right (negative or positive)
-  int side = sgn(((-1 * headingVector.y) * targetVector.x) + (headingVector.x * targetVector.y)) * -1;
-
-  targetHeading = gyro.get_rotation() + (targetHeading * side);
+  //int side = sgn(((-1 * headingVector.y) * targetVector.x) + (headingVector.x * targetVector.y)) * -1;
+  int side = sgn((headingVector.x * y) - (headingVector.y * x)) * -1;
+  master.print(1, 0, "targetHeading: %d", targetHeading);
+  targetHeading = (gyro.get_yaw()) + (targetHeading * side);
+  
 
 
   if(reversed) {
     targetHeading += 180;
   }
 
-  turnPID(targetHeading, 0.25, 0.001, 1000);
+  PIDTurn(targetHeading);
 }
 
 #endif //ODOMETRY_HPP

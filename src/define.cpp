@@ -21,6 +21,7 @@ using namespace pros; //Repeating pros:: is no longer required in declarations
 #define LEFT_ENCODER_PORT          10
 #define RIGHT_ENCODER_PORT         12
 #define IMU_SENSOR_PORT            11
+#define GPS_SENSOR_PORT            13
 
 
 //Pneumatic Ports
@@ -53,6 +54,7 @@ ADIEncoder tracking(TRACKING_FIRST_PORT, TRACKING_SECOND_PORT, false);
 Rotation leftEncoder(LEFT_ENCODER_PORT);
 Rotation rightEncoder(RIGHT_ENCODER_PORT);
 Imu gyro(IMU_SENSOR_PORT);
+GPS gps(GPS_SENSOR_PORT, 0, 0, 0);
 
 //Pneumatics declarations
 ADIDigitalOut frontClip(FRONT_CLIP_PORT);
@@ -77,3 +79,5 @@ void ResetSensors(bool calibrateGyro) {
 
   printf("Sensors reset\n");
 }
+
+float rot_offset = 0.0;
