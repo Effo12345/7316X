@@ -25,8 +25,19 @@ void RightGrab() {
   	stateMachine.setGuard();
 
   	clipGuard.set_value(true);
-	hyperGrab(39.5);
+
+	pather fastGrab({
+		{-57.5, -36.25},
+		{-17.5, -36.25}
+	}, 30, 1000, 2.5, false, false, 2000);	
 	frontClip.set_value(true);
+
+	pros::delay(100);
+
+	while(Units.DegToIn(tracking.get_value()) > 10)
+		drive_voltage(-12000, -12000);
+
+	drive_voltage(0, 0);
 }
 
 //Primary autons
@@ -39,14 +50,19 @@ void LeftFull() {
 
 	clipGuard.set_value(true);
 	frontClip.set_value(false);
-	hyperGrab(42);
+	pather fastGrab({
+		{-55.75, 44.5},
+        {-17.44, 37.06}
+	}, 30, 800, 2.5, false, false, 2000);
+	
+	//pros::delay(50);
 	frontClip.set_value(true);
-	pros::delay(50);
+	pros::delay(100);
 
 	pather path1({
 		{0, 36.14},
-		{-35.15, 43.23},
-		{-59.24, 29.06},
+        {-40.25, 47.76},
+        {-59.24, 31.89}
 	}, 20, true);
 	backClip.set_value(true);
 	pros::delay(300);
@@ -54,7 +70,7 @@ void LeftFull() {
 	lift.move_velocity(100);
 	pather path2({
 		{-53.86, 33.87},
-		{-40.35, 47.76},
+		{-40.35, 47.76}
 	}, 10, false);
 
 	
@@ -79,15 +95,19 @@ void RightFull() {
 	start_odom();
 	
 	clipGuard.set_value(true);
-	hyperGrab(39.5);
+
+	pather fastGrab({
+		{-57.5, -36.25},
+		{-17.5, -36.25}
+	}, 30, 1000, 2.5, false, false, 2000);	
 	frontClip.set_value(true);
-	//initTOW();
+
 	pros::delay(100);
 	
 	pather path({
 		{0, -35.29},
 		{-33.17, -26.79},
-		{-35.15, -57.97},
+		{-35.15, -57.97}
 	}, 20, true);
 
 	pros::delay(100);
@@ -101,7 +121,7 @@ void RightFull() {
 
 	pather path2({
 		{-35.43, -59.39},
-		{2.0, -50.05},
+		{2.0, -50.05}
 	}, 20, 30, false, 3000);
 
 	drive_velocity(-100, -100);
@@ -163,7 +183,7 @@ void RightTall() {
 
 	pather path1({
 		{0, 0},
-		{-49.32, -68.46},
+		{-49.32, -68.46}
 	}, 20, 100, 7, true, 3000);
 
 	lift.move_velocity(100);
@@ -200,7 +220,7 @@ void FullWinPoint() {
 	pather path1({
 		{-59.24, 37.84},
 		{-40.82, 41.53},
-		{-44.5, -43.23},
+		{-44.5, -43.23}
 	}, 15, false);
 	pros::delay(200);
 
@@ -209,7 +229,7 @@ void FullWinPoint() {
 
 	pather path2({
 		{-43.65, -41.53},
-		{-44.5, -70.16},
+		{-44.5, -70.16}
 	}, 20, true);
 	pros::delay(100);
 	
@@ -226,7 +246,7 @@ void FullWinPoint() {
 	pather path3({
 		{-43.65, -57.69},
 		{-25.23, -22.25},
-		{-10.77, -16.3},
+		{-10.77, -16.3}
 	}, 20, false);
 	pros::delay(100);
 
@@ -235,7 +255,7 @@ void FullWinPoint() {
 
 	pather path4({
 		{-9.92, -14.88},
-		{-52.16, -46.91},
+		{-52.16, -46.91}
 	}, 20, true);
 	pros::delay(100);
 	backClip.set_value(false);
@@ -252,7 +272,10 @@ void DoubleGrab() {
 
 
   	clipGuard.set_value(true);
-	hyperGrab(39.5);
+	pather fastGrab({
+		{-57.5, -36.25},
+		{-17.5, -36.25}
+	}, 30, 1000, 2.5, false, false, 2000);
 	frontClip.set_value(true);
 	pros::delay(50);
 	lift.move_velocity(10);
@@ -261,7 +284,7 @@ void DoubleGrab() {
 		{0, -35.01},
 		{-31.18, -36.43},
 		{-17.57, -14.6},
-		{-6.5, -8.93},
+		{-6.5, -8.93}
 	}, 20, 200, 8, true, 3000);
 	lift.move_velocity(0);
 
@@ -270,7 +293,7 @@ void DoubleGrab() {
 
 	pather path2({
 		{-0.28, 0.14},
-		{-32.88, -11.2},
+		{-32.88, -11.2}
 	}, 20, false);
 
 	PIDTurn(90);
@@ -279,13 +302,13 @@ void DoubleGrab() {
 
 	pather path3({
 		{-28.91, -12.9},
-		{-28.91, -38.41},
+		{-28.91, -38.41}
 	}, 20, false);
 
 	PIDTurn(-150);
 	pather path4({
 		{-36, -33.87},
-		{-32, -68.74},
+		{-32, -68.74}
 	}, 20, true);
 	backClip.set_value(true);
 	pros::delay(500);
@@ -309,299 +332,198 @@ void DoubleGrab() {
 
 //Skills
 void Skills() {
-	pros::Task odom_task(TrackPosition, "Odometry");
-	
-	backClip.set_value(true);
-	pros::delay(500);
-
-	
-	pather path1({
-		{0.0, 0.0},
-		{0.0, 10.0},
-		{56.0, -2.0}
-	}, 8, false);
-	
-	pros::delay(500);
-	frontClip.set_value(true);
-	pros::delay(100);
-
-	lift.move_velocity(100);
-	pros::delay(2000);
-	lift.move_velocity(0);
-
-
-
-	pather path2({
-		{56.0, -2.0},
-		{99.0, -30.0}
-	}, 20, 150, false, 3000);
-
-	lift.move_velocity(-100);
-	pros::delay(850);
-	lift.move_velocity(0);
-
-	frontClip.set_value(false);
-	lift.move_velocity(100);
-	pros::delay(300);
-	lift.move_velocity(0);
-
-	drive_velocity(-100, -100);
-	pros::delay(500);
-	drive_velocity(0, 0);
-	backClip.set_value(false);
-	pros::delay(500);
-
-	lift.move_velocity(-100);
-	drive_velocity(100, 100);
-	pros::delay(200);
-	drive_velocity(0, 0);
-	pros::delay(100);
-
-	PIDTurn(gyro.get_rotation() + 170);
-	pros::delay(500);
-
-	drive_velocity(100, 100);
-	pros::delay(300);
-	drive_velocity(0, 0);
-	pros::delay(500);
-	frontClip.set_value(true);
-	pros::delay(200);
-
-
-	PIDTurn(125);
-	pros::delay(500);
-
-	lift.move_velocity(100);
-	pros::delay(2000);
-	lift.move_velocity(0);
-	pros::delay(100);
-
-	drive_velocity(100, 100);
-	pros::delay(1000);
-	drive_velocity(0, 0);
-
-	lift.move_velocity(-100);
-	pros::delay(700);
-	lift.move_velocity(0);
-
-	frontClip.set_value(false);
-	pros::delay(100);
-
-	lift.move_velocity(100);
-	pros::delay(300);
-	lift.move_velocity(0);
-	pros::delay(100);
-
-	drive_velocity(-100, -100);
-	pros::delay(300);
-	drive_velocity(0, 0);
-	lift.move_velocity(-100);
-	pros::delay(1500);
-	lift.move_velocity(0);
-
-	PIDTurn(2);
-	pros::delay(500);
-
-	drive_velocity(50, 50);
-	pros::delay(2000);
-	drive_velocity(0, 0);
-	frontClip.set_value(true);
-	pros::delay(200);
-
-	
-	pather path3({
-		{156, -47},
-		{156, -70},
-
-	}, 15, 75, true, 3000);
-	pros::delay(100);
-
-	PIDTurn(47);
-
-	pather path3_t({
-		{156, -70},
-		{65, -153}
-	}, 15, 75, true, 4000);
-	
-	
-
-	/*
-	pather path3_local({
-		{0, 0},
-		{-40, -47},
-		{-44, -50},
-		{-89, -95}
-	}, 15, 75, true);
-	*/
-
-	
-	pros::delay(100);
-
-	pather path4({
-		{61, -154},
-		{84, -154},
-		{84, -123}
-	}, 10, false);
-
-	pather path5({
-		{84, -120},
-		{84, -150}
-	}, 10, 150, true, 2000);
-	pros::delay(250);
-
-	drive_velocity(-100, -100);
-	pros::delay(500);
-	drive_velocity(0,0);
-
-	backClip.set_value(true);
-	pros::delay(500);
-	
-	lift.move_velocity(100);
-
-	pather path6({
-		{82, -152},
-		{82, -100}
-	}, 15, 150, false, 3000);
-	pros::delay(1000);
-
-	//drive_velocity(-100, 100);
-	//pros::delay(500);
-	//drive_velocity(0, 0);
-	//PIDTurn(-90);
-	//pros::delay(300);
-	lift.move_velocity(-100);
-	//drive_velocity(50, 50);
-	pros::delay(100);
-	//drive_velocity(0, 0);
-	pros::delay(500);
-	lift.move_velocity(0);
-	frontClip.set_value(false);
-	pros::delay(100);
-	lift.move_velocity(100);
-	pros::delay(300);
-	lift.move_velocity(0);
-	
-	//PIDTurn(0);
-
-	pros::delay(100);
-	//lift.move_velocity(-100);
-
-	pather path7({
-		{82, -44},
-		{82, -80}
-	}, 10, true);
-	pros::delay(500);
-
-	gyro.tare();
-	turnPID(89, 0.25, 0.001, 1000);
-
-	lift.move_velocity(-100);
-	pros::delay(1500);
-	
-
-	pather path8({
-		{123, -80},
-		{144, -80}
-	}, 10, false);
-	pros::delay(500);
-	frontClip.set_value(true);
-	pros::delay(100);
-
-	//turnPID(130, 0.25, 0.001, 1000);
-
-	drive_voltage(6000, 6000);
-	pros::delay(3000);
-	drive_voltage(0, 0);
-
-/*
-	lift.move_velocity(100);
-	pros::delay(2000);
-	lift.move_velocity(0);
-
-	pather path9({
-		{146, -80},
-		{171, -67},
-		{187, -67}
-	}, 15, false);
-
-	frontClip.set_value(false);
-	pros::delay(100);
-
-	lift.move_velocity(100);
-	pros::delay(750);
-	lift.move_velocity(0);
-
-	
-	drive_velocity(-25, -25);
-	pros::delay(250);
-	drive_velocity(0, 0);
-	*/
-	
-}
-
-void tmp() {
-	//calibrate_odom();
-	
-	/*
-	initTOW();
-
-	tOW.join();
-	drive_voltage(-12000, -12000);
-	*/
-
-	
 	set_odom(-57.5, -36.25, 90);
 	start_odom();
-	
-	clipGuard.set_value(true);
 
 	pather fastGrab({
 		{-57.5, -36.25},
 		{-17.5, -36.25}
-	}, 30, 1000, 2.5, false, false, 2000);	
+	}, 30, 1000, 2.5, false, false, 2000);
 	frontClip.set_value(true);
+	pros::delay(50);
+	lift.move_velocity(10);
 
-	pros::delay(100);
-	
-	pather path({
-		{0, -35.29},
-		{-33.17, -26.79},
-		{-35.15, -57.97},
-	}, 20, true);
+	pather tallGrab({
+		{0, -35.01},
+		{-31.18, -36.43},
+		{-17.57, -14.6},
+		{-6.5, -8.93}
+	}, 20, 200, 8, true, 3000);
+	lift.move_velocity(0);
 
-	pros::delay(100);
 	backClip.set_value(true);
-	//stopTOW();
+	pros::delay(300);
+
+	pather tallToHomeZone({
+		{-0.28, 0.14},
+		{-32.88, -11.2}
+	}, 20, false);
+
+	PIDTurn(90);
+	backClip.set_value(false);
+	pros::delay(100);
+
+	pather towardsAlliance({
+		{-28.91, -12.9},
+		{-28.91, -38.41}
+	}, 20, false);
+
+	PIDTurn(-150);
+	pather allianceGrab({
+		{-36, -33.87},
+		{-32, -68.74}
+	}, 20, true);
+	backClip.set_value(true);
+	pros::delay(500);
 
 	lift.move_velocity(100);
-	PIDTurn(-10);
+	PIDTurn(-150);
+	ringIntake(on);
+	pros::delay(500);
+	pros::delay(500);
+	ringMove(2000);
 	lift.move_velocity(0);
-	ringIntake(on);
 
-	pather path2({
-		{-35.43, -59.39},
-		{2.0, -50.05},
+	drive_voltage(-6000, -6000);
+	pros::delay(400);
+	drive_voltage(0, 0);
+	PIDTurn(0);
+	pros::delay(100);
+	PIDTurn(10);
+	pros::delay(100);
+	
+	pather ringLine({
+		{-70.3, -47.2},
+        {-24.09, -50.6},
+        {1.13, -52.02}
 	}, 20, 30, false, 3000);
+	pros::delay(100);
 
-	drive_velocity(-100, -100);
-	pros::delay(1250);
-	drive_velocity(0, 0);
-	backClip.set_value(false);
-
-
-	/*
-	clipGuard.set_value(true);
-	ringIntake(on);
-	lift.move_velocity(25);
-	drive_voltage(12000, 12000);
-	while(tracking.get_value() < 2007)
-		pros::delay(10);
+	pather towardsPlatform({
+		{0.57, -50.6},
+        {30.61, -46.63},
+        {28.06, -0.43}
+	}, 20, false);
 	ringIntake(off);
+	pros::delay(100);
+
+	PIDTurn(0);
+	pros::delay(100);
+
+	drive_voltage(6000, 6000);
+	pros::delay(250);
+	drive_voltage(0, 0);
+
 	lift.move_velocity(-100);
-	hyperGrab(50);
+	pros::delay(2000);
+	frontClip.set_value(false);
+	lift.move_velocity(100);
+	pros::delay(700);
+	lift.move_velocity(0);
+
+	PIDTurn(-90);
+	pros::delay(100);
+	lift.move_velocity(-100);
+	backClip.set_value(false);
 	pros::delay(300);
+
+	drive_voltage(6000, 6000);
+	pros::delay(250);
+	drive_voltage(0, 0);
+
+	PIDTurn(90);
+	pros::delay(100);
+	PIDTurn(90);
+	pros::delay(100);
+
+	pather allianceGrab2({
+		{37.98, -2.41},
+        {36.57, 32.74},
+        {37.98, 70.44}
+	}, 20, true);
+	pros::delay(100);
+
+	backClip.set_value(true);
+	pros::delay(300);
+
+	pather neutralGrab({
+		{35.15, 57.97},
+        {42.8, 30.76},
+        {-2.83, 33.59}
+	}, 20, false);
+	pros::delay(200);
 	frontClip.set_value(true);
 	pros::delay(100);
-	*/
-	//turnTo(10, 10, false);
+
+	lift.move_velocity(10);
+	pather moveBack({
+		{0, 36.14},
+        {35.43, 33.87},
+        {50.74, 48.05}
+	}, 20, true);
+	lift.move_velocity(100);
+	pros::delay(100);
+
+	PIDTurn(180);
+	pros::delay(100);
+
+	ringIntake(on);
+	pather ringGrab({
+		{50.74, 48.05},
+        {24.38, 48.05},
+        {-2, 50.05},
+        {-68.88, 47.76}
+	}, 20, 30, false, 10000);
+	pros::delay(100);
+	ringIntake(off);
+
+	pather ringSafety({
+		{-70.3, 48.33},
+        {-40.54, 55.42},
+        {-34.58, 31.89}
+	}, 20, true);
+	pros::delay(100);
+
+	PIDTurn(90);
+	pros::delay(100);
+	PIDTurn(90);
+	pros::delay(100);
+
+	pather stack2({
+		{-34.58, 31.89},
+        {-30.9, 18.28},
+        {-43.65, 8.36}
+	}, 20, false);
+
+	PIDTurn(130);
+	pros::delay(100);
+	PIDTurn(130);
+	pros::delay(100);
+
+	drive_voltage(6000, 6000);
+	pros::delay(500);
+	drive_voltage(0, 0);
+
+	PIDTurn(180);
+	pros::delay(100);
+
+	drive_voltage(6000, 6000);
+	pros::delay(250);
+	drive_voltage(0, 0);
+
+	lift.move_velocity(-100);
+	pros::delay(2000);
+	frontClip.set_value(false);
+	lift.move_velocity(100);
+
+	PIDTurn(90);
+	pros::delay(100);
+	PIDTurn(90);
+	pros::delay(100);
+
+	drive_velocity(-6000, -6000);
+	pros::delay(750);
+	drive_velocity(0, 0);
 }
+
+

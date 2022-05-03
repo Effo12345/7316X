@@ -60,9 +60,6 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {	
-	//tmp();
-
-
 	//Execute the autonomous program previously set by the auton selector
 	getSelection()();
 }
