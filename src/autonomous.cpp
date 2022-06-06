@@ -25,6 +25,7 @@ void RightGrab() {
   	stateMachine.setGuard();
 
   	clipGuard.set_value(true);
+	frontClip.set_value(false);
 
 	pather fastGrab({
 		{-57.5, -36.25},
@@ -76,15 +77,21 @@ void LeftFull() {
 	
 	PIDTurn(-165);
 	pros::delay(1000);
-	ringIntake(on);
-	ringMove(2500);
-	lift.move_velocity(0);
+	if(gyro.get_pitch() > 50) {
+		lift.move_velocity(-100);
+		pros::delay(5000);
+	}
+	else {
+		ringIntake(on);
+		ringMove(2500);
+		lift.move_velocity(0);
 
-	drive_velocity(-100, -100);
-	pros::delay(500);
-	drive_velocity(0, 0);
-	backClip.set_value(false);
-	ringIntake(off);
+		drive_velocity(-100, -100);
+		pros::delay(500);
+		drive_velocity(0, 0);
+		backClip.set_value(false);
+		ringIntake(off);
+	}
 }
 
 void RightFull() {
@@ -95,6 +102,7 @@ void RightFull() {
 	start_odom();
 	
 	clipGuard.set_value(true);
+	frontClip.set_value(false);
 
 	pather fastGrab({
 		{-57.5, -36.25},
@@ -176,6 +184,7 @@ void RightTall() {
 	start_odom();
 
 	clipGuard.set_value(true);
+	frontClip.set_value(false);
 	hyperGrab(48);
 	pros::delay(200);
 	frontClip.set_value(true);
@@ -213,6 +222,7 @@ void FullWinPoint() {
 	start_odom();
 
 	backClip.set_value(true);
+	frontClip.set_value(false);
 	pros::delay(200);
 	backClip.set_value(false);
 	pros::delay(500);
@@ -272,6 +282,7 @@ void DoubleGrab() {
 
 
   	clipGuard.set_value(true);
+	frontClip.set_value(false);
 	pather fastGrab({
 		{-57.5, -36.25},
 		{-17.5, -36.25}
@@ -335,6 +346,8 @@ void Skills() {
 	set_odom(-57.5, -36.25, 90);
 	start_odom();
 
+	frontClip.set_value(false);
+
 	pather fastGrab({
 		{-57.5, -36.25},
 		{-17.5, -36.25}
@@ -381,7 +394,7 @@ void Skills() {
 	ringIntake(on);
 	pros::delay(500);
 	pros::delay(500);
-	ringMove(2000);
+	ringMove(2500);
 	lift.move_velocity(0);
 
 	drive_voltage(-6000, -6000);
@@ -521,9 +534,36 @@ void Skills() {
 	PIDTurn(90);
 	pros::delay(100);
 
+	lift.move_velocity(-100);
 	drive_velocity(-6000, -6000);
-	pros::delay(750);
+	pros::delay(500);
 	drive_velocity(0, 0);
+	pros::delay(500);
+
+	backClip.set_value(false);
+	pros::delay(300);
+
+	drive_voltage(6000, 6000);
+	pros::delay(100);
+	drive_voltage(0, 0);
+
+	PIDTurn(140);
+	pros::delay(100);
+	PIDTurn(140);
+	pros::delay(100);
+
+	drive_voltage(6000, 6000);
+	pros::delay(600);
+	drive_voltage(0, 0);
+	pros::delay(100);
+
+	frontClip.set_value(true);
+	pros::delay(100);
+
+	pather towardsRed({
+		{-58.39, 31.61},
+        {51.31, 39.83}
+	}, 20, true);
 }
 
 

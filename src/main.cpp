@@ -5,7 +5,7 @@
 
 int stickMultiplier = 1;
 int intakeToggle = false;
-bool frontClipToggle = false;
+bool frontClipToggle = true;
 bool backClipToggle = false;
 bool clipGuardToggle = false;
 bool autoIntake = false;
